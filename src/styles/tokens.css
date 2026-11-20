@@ -65,6 +65,23 @@
   --mapa-tunel-acceso: #6b6157;
   --mapa-guia-nivel: rgba(143, 132, 117, 0.5);
 
+  /* ── Chapas del tablero (latón y metal frío "sin señal") ───── */
+  --chapa-laton-claro: #f0d7a8;
+  --chapa-laton: var(--color-oro);
+  --chapa-laton-oscuro: #b8935e;
+  --chapa-borde: #8a6a3c;
+  --chapa-texto: #2a1d10;
+  --chapa-gris-claro: #a7a29c;
+  --chapa-gris-oscuro: #5b5651;
+  --chapa-gris-borde: #4c4844;
+  --chapa-gris-texto: #1c1a18;
+
+  /* ── Papel (hojas imprimibles de QR) ───────────────────────── */
+  --papel: #ffffff;
+  --papel-tinta: #111111;
+  --papel-tinta-suave: #444444;
+  --papel-guia: #888888;
+
   /* ── Tipografía ────────────────────────────────────────────── */
   --fuente-titulos: 'Barlow Condensed', 'Arial Narrow', sans-serif;
   --fuente-texto: 'Barlow', system-ui, sans-serif;

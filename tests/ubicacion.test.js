@@ -126,3 +126,19 @@ describe('validarEscaneo', () => {
     expect(() => validarEscaneo({ nodoId: 'ZZZ', nodosPorId, galeriasPorId })).toThrow(ErrorDeValidacion);
   });
 });
+
+describe('códigos QR', () => {
+  it('genera y lee códigos de balizas y cargas', async () => {
+    const { codigoDeBaliza, codigoQrDeCarga, leerCodigoQr } = await import('../src/domain/ubicacion.js');
+    expect(codigoDeBaliza('G3-F')).toBe('CANARIO:BALIZA:G3-F');
+    expect(leerCodigoQr(codigoDeBaliza('G3-F'))).toEqual({ tipo: 'baliza', valor: 'G3-F' });
+    expect(leerCodigoQr(` ${codigoQrDeCarga('CAN-0042')} `)).toEqual({ tipo: 'carga', valor: 'CAN-0042' });
+  });
+  it('rechaza textos que no son de Canario', async () => {
+    const { leerCodigoQr } = await import('../src/domain/ubicacion.js');
+    expect(leerCodigoQr('https://ejemplo.com')).toBeNull();
+    expect(leerCodigoQr('CANARIO:OTRA:X')).toBeNull();
+    expect(leerCodigoQr('CANARIO:BALIZA:')).toBeNull();
+    expect(leerCodigoQr(null)).toBeNull();
+  });
+});

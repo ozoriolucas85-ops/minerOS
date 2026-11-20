@@ -2,8 +2,8 @@
 
 import { estado } from '../state.js';
 import { indexarPorId } from '../domain/utilidades.js';
-import { ubicarPersonas } from '../domain/ubicacion.js';
-import { crearGrafo, rutaDeSalida } from '../domain/rutas.js';
+import { ubicarPersonas, estadoDePersona, escaneosDe } from '../domain/ubicacion.js';
+import { crearGrafo, rutaDeSalida, hiloDeAriadna, caminoDelHilo, volverPorElHilo } from '../domain/rutas.js';
 
 export function nodosPorId() {
   return indexarPorId(estado.listar('nodos'));
@@ -41,4 +41,17 @@ export function rutaDeSalidaDesde(nodoId, opciones = {}) {
 export function describirCamino(camino) {
   const nodos = nodosPorId();
   return camino.map((id) => nodos.get(id)?.nombre ?? id).join(' → ');
+}
+
+/**
+ * Hilo de Ariadna de una persona en su visita actual (desde que entró).
+ * @returns {{ secuencia: string[], camino: string[], vuelta: string[] }}
+ */
+export function hiloDe(usuarioId) {
+  const nodos = nodosPorId();
+  const escaneos = estado.listar('escaneos');
+  const { entrada } = estadoDePersona(escaneosDe(escaneos, usuarioId), nodos);
+  const secuencia = hiloDeAriadna(escaneos, usuarioId, { desde: entrada?.timestamp ?? -Infinity });
+  const camino = caminoDelHilo(crearGrafo(estado.listar('nodos'), estado.listar('aristas')), secuencia);
+  return { secuencia, camino, vuelta: volverPorElHilo(camino) };
 }

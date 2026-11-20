@@ -247,3 +247,18 @@
   0% { opacity: 1; }
   100% { opacity: 0.35; }
 }
+
+/* Resumen de alertas en la cabecera fija */
+.cabecera__alertas { display: flex; gap: var(--esp-2); margin-left: auto; }
+.alerta-mini {
+  display: inline-flex; align-items: center; gap: var(--esp-1);
+  min-height: 36px; padding: 0 var(--esp-3);
+  border: 2px solid; border-radius: var(--radio-pildora);
+  font-family: var(--fuente-titulos); font-weight: var(--peso-titulo); font-size: var(--texto-sm);
+  text-decoration: none; letter-spacing: 0.03em;
+}
+.alerta-mini svg { width: 18px; height: 18px; }
+.alerta-mini--rojo { color: var(--color-rojo-texto); border-color: var(--color-rojo); background: var(--color-rojo-tenue); }
+.alerta-mini--amarillo { color: var(--color-amarillo-texto); border-color: var(--color-amarillo); background: var(--color-amarillo-tenue); }
+.alerta-mini--amarillo svg, .alerta-mini--rojo svg { animation: parpadeo var(--parpadeo) steps(2, jump-none) infinite; }
+@media (max-width: 767px) { .alerta-mini__texto { display: none; } }

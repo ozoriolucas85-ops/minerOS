@@ -76,3 +76,40 @@ export function extensionDeGaleria(galeriaId, nodos) {
   const xs = propios.map((n) => n.x);
   return { minX: Math.min(...xs), maxX: Math.max(...xs), y: propios[0].y };
 }
+
+/**
+ * Posición de cada persona en el dibujo: en su última baliza; si hay varias en
+ * el mismo punto, se reparten en un círculo alrededor para que no se tapen.
+ * @param {Array<{ usuario: {id}, nodoId: string }>} personas
+ * @returns {Map<string, { x: number, y: number }>} usuarioId → posición
+ */
+export function posicionesDePersonas(personas, nodosPorId, radio = 15) {
+  const porNodo = new Map();
+  for (const p of personas) {
+    if (!nodosPorId.has(p.nodoId)) continue;
+    if (!porNodo.has(p.nodoId)) porNodo.set(p.nodoId, []);
+    porNodo.get(p.nodoId).push(p.usuario.id);
+  }
+  const posiciones = new Map();
+  for (const [nodoId, ids] of porNodo) {
+    const { x, y } = nodosPorId.get(nodoId);
+    ids.forEach((id, i) => {
+      if (ids.length === 1) {
+        posiciones.set(id, { x, y: y - radio });
+        return;
+      }
+      const angulo = -Math.PI / 2 + (i * 2 * Math.PI) / ids.length;
+      posiciones.set(id, { x: x + radio * Math.cos(angulo), y: y + radio * Math.sin(angulo) });
+    });
+  }
+  return posiciones;
+}
+
+/** "M x y L x y …" por los nodos de un camino. */
+export function trazoDeCamino(camino, nodosPorId) {
+  return camino
+    .map((id) => nodosPorId.get(id))
+    .filter(Boolean)
+    .map((n, i) => `${i === 0 ? 'M' : 'L'}${n.x} ${n.y}`)
+    .join(' ');
+}

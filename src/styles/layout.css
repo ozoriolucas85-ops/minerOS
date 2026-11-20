@@ -107,7 +107,8 @@
   margin: 0;
   font-size: var(--texto-xl);
 }
-.cabecera__acciones { margin-left: auto; display: flex; align-items: center; gap: var(--esp-2); }
+.cabecera__acciones { display: flex; align-items: center; gap: var(--esp-2); }
+.cabecera__acciones:empty { display: none; }
 
 .pantalla {
   width: 100%;

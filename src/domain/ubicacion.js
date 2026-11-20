@@ -114,3 +114,29 @@ export function validarEscaneo({ nodoId, nodosPorId, galeriasPorId }) {
   }
   return nodo;
 }
+
+// ── Códigos QR ───────────────────────────────────────────────────
+// Formato: "CANARIO:BALIZA:<nodoId>" y "CANARIO:CARGA:<codigo>".
+
+const PREFIJO_QR = 'CANARIO';
+
+/** Texto que lleva el QR impreso de una baliza. */
+export function codigoDeBaliza(nodoId) {
+  return `${PREFIJO_QR}:BALIZA:${nodoId}`;
+}
+
+/** Texto que lleva el QR de una carga. */
+export function codigoQrDeCarga(codigoCarga) {
+  return `${PREFIJO_QR}:CARGA:${codigoCarga}`;
+}
+
+/**
+ * Interpreta el texto leído de un QR.
+ * @returns {{ tipo: 'baliza'|'carga', valor: string } | null}
+ */
+export function leerCodigoQr(texto) {
+  const partes = String(texto ?? '').trim().split(':');
+  if (partes.length !== 3 || partes[0] !== PREFIJO_QR || !partes[2]) return null;
+  const tipo = { BALIZA: 'baliza', CARGA: 'carga' }[partes[1]];
+  return tipo ? { tipo, valor: partes[2] } : null;
+}

@@ -89,3 +89,24 @@ describe('dibujarMapa', () => {
     expect(mini.contenido).not.toContain('tabindex');
   });
 });
+
+describe('personas y caminos en el mapa', () => {
+  it('una persona sola queda sobre su baliza; varias se reparten', async () => {
+    const { posicionesDePersonas } = await import('../src/ui/mapa/geometria.js');
+    const p = (id, nodoId) => ({ usuario: { id }, nodoId });
+    const pos = posicionesDePersonas([p('a', 'C1'), p('b', 'G3-F'), p('c', 'G3-F'), p('d', 'NADA')], nodosPorId, 10);
+    expect(pos.get('a')).toEqual({ x: 420, y: 200 });
+    const b = pos.get('b');
+    const c = pos.get('c');
+    expect(Math.round(b.x)).toBe(1050);
+    expect(Math.round(b.y)).toBe(330);
+    expect(Math.round(c.y)).toBe(350);
+    expect(pos.has('d')).toBe(false);
+  });
+
+  it('trazo de un camino por sus nodos', async () => {
+    const { trazoDeCamino } = await import('../src/ui/mapa/geometria.js');
+    expect(trazoDeCamino(['BOCA', 'C1', 'X'], nodosPorId)).toBe('M330 80 L420 210');
+    expect(trazoDeCamino([], nodosPorId)).toBe('');
+  });
+});

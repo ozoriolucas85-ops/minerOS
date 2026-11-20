@@ -71,7 +71,7 @@ function banner({ galeria, nivel, personas }, abiertos) {
  * Monta los banners en el contenedor y los mantiene actualizados.
  * El botón de silenciar apaga la alarma hasta que aparezca una alerta nueva.
  */
-export function montarAlertas(contenedor) {
+export function montarAlertas(contenedor, resumen = document.querySelector('#alertas-cabecera')) {
   prepararAlarma();
   let silenciadas = new Set(); // claves de alerta silenciadas
   let ultimaFirma = '';
@@ -94,6 +94,23 @@ export function montarAlertas(contenedor) {
     ultimaFirma = firma;
 
     document.body.classList.toggle('hay-alertas', alertas.length > 0);
+    // Resumen siempre visible en la cabecera fija (los banners quedan arriba de todo).
+    if (resumen) {
+      const cuenta = (n) => alertas.filter((a) => a.nivel === n).length;
+      resumen.innerHTML = ['rojo', 'amarillo']
+        .filter((n) => cuenta(n))
+        .map(
+          (n) => `<a class="alerta-mini alerta-mini--${n}" href="#banners" data-ir-banners>
+            ${icono(`estado-${n}`)} <span class="alerta-mini__texto">${ESTADOS[n].mensaje}</span> <span class="mono">${cuenta(n)}</span></a>`,
+        )
+        .join('');
+      resumen.querySelectorAll('[data-ir-banners]').forEach((a) =>
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }),
+      );
+    }
     if (!alertas.length) {
       contenedor.innerHTML = '';
       return;

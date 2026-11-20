@@ -94,3 +94,26 @@ Todo `src/domain/` es puro: recibe datos y `config`, devuelve resultados, sin DO
 - Test nuevo: `tests/mapa-geometria.test.js` (geometría y contenido del SVG: ids, estados, bloqueo, íconos y capas).
 
 **Verificación:** `npm test` ✔ (177 tests) · `npm run build` ✔ · navegador: el mapa se ve como el boceto aprobado; clic real en "G1 · Galería Norte" → abre `#/galerias/G1`; Enter con foco en G6 → abre su ficha; un avance en G1 la pasa de `galeria--verde` a `galeria--amarillo` al instante, sin recargar; los botones + y − y la rueda cambian el `viewBox`; un arrastre desplaza el mapa y no abre la galería. Celular (390 px): ventana cuadrada `287 0 606 606` con leyenda debajo; tablet (820 px) con el corte completo.
+
+## Fase 6 — Balizas, tablero de chapas e hilo de Ariadna ✅ (2026-11-20)
+
+- **Dominio:** `codigoDeBaliza`, `codigoQrDeCarga` y `leerCodigoQr` (formato `CANARIO:BALIZA:G3-F` / `CANARIO:CARGA:CAN-0042`), con tests.
+- **Servicios:** `servicios/escaneos.js` → `registrarEscaneo` valida con el dominio (una baliza de galería bloqueada rechaza el escaneo y deja un evento `escaneo-rechazado`) y devuelve si la persona quedó adentro. `servicios/ubicacion.js` → `hiloDe(usuarioId)` (hilo de la visita actual, camino continuo por los túneles y vuelta).
+- **Balizas `#/balizas`:**
+  - Pestaña "Escanear": cámara con html5-qrcode (se carga solo al usarla, cámara trasera y sin repetir el mismo QR seguido) y selector manual de baliza de respaldo (las balizas de galerías cerradas dicen "CERRADA"). Muestra el resultado con la ruta de salida si la persona quedó adentro. Por ahora se elige quién escanea; en la fase 10 sale de la sesión.
+  - Pestaña "Generar e imprimir QR" (`#/balizas/imprimir`): QR en SVG con la librería qrcode, 12 por hoja A4 con nombre, tipo, galería, nivel e id. Hoja `@media print` sin el resto de la app.
+- **Tablero de chapas `#/chapas`:** chapas de latón (con agujero para colgar) con nombre, cuadrilla, lugar y hace cuánto escaneó. Agrupadas por galería (con su estado) más "Rampas, cruces y refugios" y "Afuera". Chapa gris "sin señal" según `config.minutosSinSenal`. En galerías en rojo, la chapa parpadea como prioridad de rescate. Contadores de personas adentro y sin señal; se actualiza cada 30 s.
+- **Mapa:** trabajadores como puntos en su última baliza (repartidos si hay varios en el mismo punto), gris si no tienen señal, con pulso rojo si están en una galería en rojo, y nombre al tocarlos, pasar el mouse o con "Mostrar nombres". Panel lateral de personas adentro; al elegir una: **Hilo de Ariadna** (línea punteada animada en oro), **Volver por el hilo** (el mismo recorrido al revés) y **Ruta de salida** (BFS a la boca o al refugio más cercano, resaltada en ámbar, con los pasos en texto).
+- **Alertas:** resumen siempre visible en la cabecera fija ("✕ PELIGRO DE DERRUMBE 1", "! EVACUACIÓN 1"), que lleva a los banners.
+- **HTTPS local para probar la cámara en el celular:** `npm run dev:https` (plugin basic-ssl; abre en `https://<IP-de-la-PC>:5173`, aceptando el certificado).
+- Colores de chapas y papel pasados a tokens; `[hidden]` siempre oculta.
+- Tests nuevos: códigos QR, posiciones de personas y trazo de caminos.
+
+**Verificación:** `npm test` ✔ (181 tests) · `npm run build` ✔ · navegador:
+- Con `minutosSinSenal` = 15, las 8 chapas pasan a gris "sin señal"; con 40 vuelven.
+- Escaneo manual (clic real) de Jorge Medina en la boca: su chapa pasa a "Afuera" y el contador baja de 8 a 7.
+- Con G5 bloqueada, escanear "Profunda · km 1" muestra "Acceso rechazado… PELIGRO DE DERRUMBE".
+- La hoja de QR genera 2 hojas A4 con 17 códigos. Un QR generado leído con html5-qrcode (`scanFile`) devuelve `CANARIO:BALIZA:G3-F` → baliza G3-F.
+- En el mapa, clic en Nicolás Vera (G5 en rojo) → hilo, vuelta y ruta de salida Frente Profunda → … → Refugio 2.
+- Con G6 bloqueada, la salida desde el cruce −60 cambia de "C3→G6-P→R2" a "C3→C2→C1→BOCA" (esquiva la galería en rojo); quien está dentro de G6 puede salir por ella.
+- Vistas a 390 px revisadas. La lectura con la cámara de un celular real queda para que la pruebes vos con `npm run dev:https`.

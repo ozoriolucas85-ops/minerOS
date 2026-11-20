@@ -12,6 +12,8 @@ import {
   ladoDelFrente,
   puntoMedio,
   extensionDeGaleria,
+  posicionesDePersonas,
+  trazoDeCamino,
 } from './geometria.js';
 
 const SIMBOLO = { verde: '✓', amarillo: '!', rojo: '✕' };
@@ -187,4 +189,53 @@ export function dibujarMapa({ nodos, aristas, galerias, estados }, { prefijo = '
     <g class="mapa__rutas" id="${prefijo}-rutas"></g>
     <g class="mapa__personas" id="${prefijo}-personas"></g>`;
   return { contenido, ancho, alto };
+}
+
+/**
+ * Capa de personas: un punto por persona adentro, en su última baliza.
+ * @param {Array} personas ubicaciones (solo las que están adentro)
+ * @param {{ nodos: object[], seleccionadoId?: string, galeriasEnRojo?: Set<string>, mostrarNombres?: boolean }} opciones
+ */
+export function dibujarPersonas(personas, { nodos, seleccionadoId = null, galeriasEnRojo = new Set(), mostrarNombres = false }) {
+  const nodosPorId = new Map(nodos.map((n) => [n.id, n]));
+  const posiciones = posicionesDePersonas(personas, nodosPorId);
+  return personas
+    .filter((p) => posiciones.has(p.usuario.id))
+    .map((p) => {
+      const { x, y } = posiciones.get(p.usuario.id);
+      const rescate = p.galeriaId && galeriasEnRojo.has(p.galeriaId);
+      const clases = ['persona', p.sinSenal ? 'persona--sin-senal' : '', rescate ? 'persona--rescate' : '', p.usuario.id === seleccionadoId ? 'persona--seleccionada' : '']
+        .filter(Boolean)
+        .join(' ');
+      const nombre = p.usuario.nombre.split(' ')[0];
+      const estadoTexto = rescate ? ', prioridad de rescate' : p.sinSenal ? ', sin señal' : '';
+      return `
+        <g class="${clases}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})" data-persona="${p.usuario.id}"
+           role="button" tabindex="0" aria-label="${esc(p.usuario.nombre)}${estadoTexto}">
+          <title>${esc(p.usuario.nombre)}${estadoTexto}</title>
+          ${rescate ? '<circle class="persona__pulso" r="9" />' : ''}
+          <circle class="persona__punto" r="7" />
+          <text class="persona__nombre ${mostrarNombres || p.usuario.id === seleccionadoId ? '' : 'persona__nombre--oculto'}" y="-12" text-anchor="middle">${esc(nombre)}</text>
+        </g>`;
+    })
+    .join('');
+}
+
+/**
+ * Un camino resaltado sobre los túneles (hilo de Ariadna o ruta de salida).
+ * @param {'hilo'|'vuelta'|'salida'} tipo
+ */
+export function dibujarCamino(camino, nodos, tipo) {
+  const nodosPorId = new Map(nodos.map((n) => [n.id, n]));
+  const d = trazoDeCamino(camino, nodosPorId);
+  if (!d) return '';
+  const fin = nodosPorId.get(camino.at(-1));
+  const inicio = nodosPorId.get(camino[0]);
+  return `
+    <g class="camino camino--${tipo}">
+      <path class="camino__halo" d="${d}" />
+      <path class="camino__linea" d="${d}" />
+      ${inicio ? `<circle class="camino__inicio" cx="${inicio.x}" cy="${inicio.y}" r="6" />` : ''}
+      ${fin ? `<circle class="camino__fin" cx="${fin.x}" cy="${fin.y}" r="11" />` : ''}
+    </g>`;
 }

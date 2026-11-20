@@ -61,6 +61,9 @@ a:hover { color: var(--color-acento-hover); }
 img,
 svg { display: block; max-width: 100%; }
 
+/* "hidden" siempre oculta, aunque la clase defina display */
+[hidden] { display: none !important; }
+
 .mono,
 code,
 kbd {

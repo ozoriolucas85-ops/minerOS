@@ -50,6 +50,7 @@ export function montarShell(raiz, pantallas) {
         <header class="cabecera">
           ${logoHtml}
           <h1 class="cabecera__titulo" id="titulo-pantalla"></h1>
+          <div class="cabecera__alertas" id="alertas-cabecera" aria-live="polite"></div>
           <div class="cabecera__acciones" id="acciones-cabecera"></div>
         </header>
         <main class="pantalla" id="pantalla" tabindex="-1"></main>
