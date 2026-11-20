@@ -1,0 +1,114 @@
+/* Mapa en corte lateral ("corte geológico"). Colores desde tokens. */
+
+.mapa-marco {
+  position: relative;
+  border-radius: var(--radio-lg);
+  overflow: hidden;
+  border: 1px solid var(--color-borde-fuerte);
+  background: var(--color-fondo-hundido);
+  box-shadow: var(--sombra-2);
+}
+.mapa {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 72vh;
+  margin: 0 auto;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+.mapa:active { cursor: grabbing; }
+
+.mapa-controles {
+  position: absolute;
+  right: var(--esp-3);
+  top: var(--esp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+}
+.mapa-controles .boton { font-size: var(--texto-xl); background: rgba(28, 25, 22, 0.9); }
+.mapa-controles svg { width: 22px; height: 22px; }
+.mapa-ayuda { margin: 0; font-size: var(--texto-sm); }
+
+/* Fondo */
+.mapa__cielo-alto { stop-color: var(--mapa-cielo-alto); }
+.mapa__cielo-bajo { stop-color: var(--mapa-cielo-bajo); }
+.mapa__terreno { fill: var(--mapa-terreno); }
+.mapa__estrato--1 { fill: var(--mapa-estrato-1); }
+.mapa__estrato--2 { fill: var(--mapa-estrato-2); }
+.mapa__estrato--3 { fill: var(--mapa-estrato-3); }
+.mapa__estrato--4 { fill: var(--mapa-estrato-4); }
+.mapa__veta { fill: var(--mapa-veta); }
+.mapa__grano-oscuro { fill: var(--mapa-tunel-corte); opacity: 0.35; }
+.mapa__grano-claro { fill: var(--color-texto); opacity: 0.04; }
+.mapa__borde-terreno { fill: none; stroke: var(--mapa-borde-terreno); stroke-width: 2; }
+.mapa__guia { stroke: var(--mapa-guia-nivel); stroke-width: 1; stroke-dasharray: 2 8; }
+.mapa__nivel { font: 500 13px var(--fuente-mono); fill: var(--color-texto-3); }
+
+/* Túneles */
+.mapa__tuneles path,
+.galeria path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.tunel__corte { stroke: var(--mapa-tunel-corte); stroke-width: 30; }
+.tunel__interior { stroke: var(--mapa-tunel-interior); stroke-width: 22; }
+.tunel__acceso { stroke: var(--mapa-tunel-acceso); stroke-width: 5; stroke-dasharray: 1 10; }
+
+/* Galerías: color del semáforo + símbolo en la etiqueta */
+.galeria { cursor: pointer; outline: none; }
+.galeria__linea { stroke-width: 8; transition: stroke-width var(--dur-rapida) var(--curva); }
+.galeria__zona { stroke: transparent; stroke-width: 34; }
+.galeria__rayado { stroke-width: 22; }
+.mapa__rayado { fill: var(--color-rojo); opacity: 0.55; }
+.galeria--verde .galeria__linea { stroke: var(--color-verde); }
+.galeria--amarillo .galeria__linea { stroke: var(--color-amarillo); }
+.galeria--rojo .galeria__linea { stroke: var(--color-rojo); }
+.galeria__nombre { font: 600 16px var(--fuente-titulos); letter-spacing: 0.02em; paint-order: stroke; stroke: var(--color-fondo-hundido); stroke-width: 4px; stroke-linejoin: round; }
+.galeria--verde .galeria__nombre { fill: var(--color-verde-texto); }
+.galeria--amarillo .galeria__nombre { fill: var(--color-amarillo-texto); }
+.galeria--rojo .galeria__nombre { fill: var(--color-rojo-texto); }
+.galeria__x circle { fill: var(--color-fondo); stroke: var(--color-rojo); stroke-width: 3; }
+.galeria__x path { stroke: var(--color-rojo); stroke-width: 3.5; }
+.galeria:hover .galeria__linea,
+.galeria:focus-visible .galeria__linea { stroke-width: 13; }
+.galeria:focus-visible .galeria__zona { stroke: var(--color-acento-tenue); }
+.galeria--amarillo .galeria__linea { animation: parpadeo var(--parpadeo) steps(2, jump-none) infinite; }
+
+/* Nodos */
+.nodo__punto { fill: var(--color-fondo); stroke: var(--color-texto); stroke-width: 3; }
+.nodo__punto--boca { stroke: var(--color-acento); }
+.nodo__castillete { fill: none; stroke: var(--color-texto-2); stroke-width: 3; stroke-linejoin: round; }
+.nodo__luz { fill: var(--color-acento); }
+.nodo__pila { fill: var(--color-marca-oscuro); stroke: var(--color-marca-claro); stroke-width: 2; }
+.nodo__refugio { fill: var(--color-fondo); stroke: var(--color-oro); stroke-width: 3; }
+.nodo__refugio-cruz { stroke: var(--color-oro); stroke-width: 3; stroke-linecap: round; fill: none; }
+.nodo__roca { fill: none; stroke: var(--color-texto-2); stroke-width: 2.5; stroke-linejoin: round; }
+.mapa__etiqueta { font: 500 13px var(--fuente-texto); fill: var(--color-texto-2); paint-order: stroke; stroke: var(--color-fondo-hundido); stroke-width: 3px; }
+.mapa__etiqueta--fuerte { font: 600 15px var(--fuente-titulos); fill: var(--color-texto); }
+
+/* Leyenda */
+.leyenda {
+  list-style: none;
+  margin: 0;
+  padding: var(--esp-4);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-3) var(--esp-5);
+  background: var(--color-superficie);
+  border: var(--borde-fino);
+  border-radius: var(--radio-lg);
+  font-size: var(--texto-sm);
+}
+.leyenda li { display: flex; align-items: center; gap: var(--esp-2); }
+.leyenda li > svg:not(.leyenda__icono) { width: 18px; height: 18px; }
+.leyenda__icono { width: 26px; height: 26px; overflow: visible; }
+.leyenda__linea { display: inline-block; width: 28px; height: 8px; border-radius: 4px; background: var(--color-borde-fuerte); }
+.leyenda__linea--verde { background: var(--color-verde); }
+.leyenda__linea--amarillo { background: var(--color-amarillo); }
+.leyenda__linea--rojo { background: var(--color-rojo); }
+.leyenda__linea--bloqueada { background: repeating-linear-gradient(135deg, var(--color-rojo) 0 4px, var(--color-fondo) 4px 8px); }
+.leyenda__linea--acceso { height: 4px; background: repeating-linear-gradient(90deg, var(--mapa-tunel-acceso) 0 4px, transparent 4px 10px); }
+.leyenda li:has(.leyenda__linea--verde) > svg { color: var(--color-verde); }
+.leyenda li:has(.leyenda__linea--amarillo) > svg { color: var(--color-amarillo); }
+.leyenda li:has(.leyenda__linea--rojo) > svg,
+.leyenda li:has(.leyenda__linea--bloqueada) > svg { color: var(--color-rojo); }

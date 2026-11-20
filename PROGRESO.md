@@ -78,3 +78,19 @@ Todo `src/domain/` es puro: recibe datos y `config`, devuelve resultados, sin DO
 **Verificación:** `npm test` ✔ (167 tests) · `npm run build` ✔ · navegador con clics reales en G3: el formulario vacío muestra el error; 1 m → amarillo (banner, canario agitado, 37,5 %); 1,5 m → rojo y bloqueo automático (formularios deshabilitados, banner de rescate). Desbloqueo sin apuntalamiento → rechazado; apuntalamiento → ✓; PIN de capataz incorrecto → rechazado; PINs correctos → reabierta, con el historial completo. Banner y alarma visibles en otra pantalla (Panel); "Silenciar" apaga la alarma. Vista celular revisada a 390 px.
 
 **Lista "Listo cuando":** ✔ verde → amarillo → rojo solo con cargar avances · ✔ en rojo no se puede cargar nada · ✔ el desbloqueo exige apuntalamiento y dos llaves · ✔ el estado se entiende sin color (texto + ícono + forma del canario).
+
+## Fase 5 — Mapa en corte lateral ✅ (2026-11-20)
+
+**Estilo aprobado:** A · "Corte geológico" (hormiguero), elegido entre dos bocetos generados con los datos reales.
+
+- `src/ui/mapa/geometria.js` (pura y testeada): superficie, tamaño del lienzo, niveles calculados desde los nodos de cada galería, límites de estratos, lado hacia el que mira cada frente y extensión de cada galería.
+- `src/ui/mapa/dibujo.js`: el SVG se genera completo a partir de nodos, aristas y galerías (no hay dibujo fijo). Cielo nocturno, terreno, estratos ondulados que se oscurecen con la profundidad, textura de grano, veta de mineral, guías y etiquetas de nivel (−20/−40/−60 m), túneles "excavados" (borde oscuro + interior) con la línea del semáforo y rampas punteadas. Íconos de boca (castillete con luz), acopio (pila), refugio (cruz), frente (roca) y balizas/cruces. Deja capas vacías para rutas y personas (fase 6).
+  - Cada galería es un `<g id="galeria-G3">` con su clase de estado, `role="link"`, `tabindex` y `aria-label`: clic, Enter o espacio abren su ficha.
+  - Bloqueadas: rayado rojo, círculos con X y "CERRADA" en la etiqueta. Cada etiqueta lleva ✓ / ! / ✕ (el estado no depende del color). En amarillo la línea parpadea.
+  - Prefijo de ids configurable para reusar el dibujo como mini mapa en el panel (fase 8).
+- `src/ui/mapa/zoom.js`: zoom con la rueda (hacia el cursor), arrastre, pellizco con dos dedos y botones + / − / ver todo (pensados para usar con guantes). Un arrastre no abre la galería que queda abajo. En celular la ventana es cuadrada y se desplaza por el corte a altura completa.
+- Pantalla `#/mapa` con leyenda de colores e íconos (con los mismos símbolos que el mapa). Se redibuja sola cuando cambian galerías, nodos, aristas o config, y conserva el zoom.
+- Colores del mapa como tokens nuevos (`--mapa-*`) en `tokens.css`; estilos en `styles/mapa.css`.
+- Test nuevo: `tests/mapa-geometria.test.js` (geometría y contenido del SVG: ids, estados, bloqueo, íconos y capas).
+
+**Verificación:** `npm test` ✔ (177 tests) · `npm run build` ✔ · navegador: el mapa se ve como el boceto aprobado; clic real en "G1 · Galería Norte" → abre `#/galerias/G1`; Enter con foco en G6 → abre su ficha; un avance en G1 la pasa de `galeria--verde` a `galeria--amarillo` al instante, sin recargar; los botones + y − y la rueda cambian el `viewBox`; un arrastre desplaza el mapa y no abre la galería. Celular (390 px): ventana cuadrada `287 0 606 606` con leyenda debajo; tablet (820 px) con el corte completo.

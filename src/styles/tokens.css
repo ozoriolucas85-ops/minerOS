@@ -50,6 +50,21 @@
   --color-rojo-texto: #ff7a7c;
   --color-sin-senal: #77706a; /* chapa gris "sin señal" (neutro, no es semáforo) */
 
+  /* ── Mapa en corte lateral (aprobado en fase 5: "corte geológico") ── */
+  --mapa-cielo-alto: #0d0b0a;
+  --mapa-cielo-bajo: #2a1d14;
+  --mapa-terreno: #4a3a2c;
+  --mapa-estrato-1: #3b2f25;
+  --mapa-estrato-2: #30271f;
+  --mapa-estrato-3: #272019;
+  --mapa-estrato-4: #1f1914;
+  --mapa-veta: rgba(110, 47, 21, 0.35);
+  --mapa-borde-terreno: #8f8475;
+  --mapa-tunel-corte: #0b0a09;
+  --mapa-tunel-interior: #3d362f;
+  --mapa-tunel-acceso: #6b6157;
+  --mapa-guia-nivel: rgba(143, 132, 117, 0.5);
+
   /* ── Tipografía ────────────────────────────────────────────── */
   --fuente-titulos: 'Barlow Condensed', 'Arial Narrow', sans-serif;
   --fuente-texto: 'Barlow', system-ui, sans-serif;
