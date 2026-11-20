@@ -27,3 +27,17 @@
 - Test nuevo: `tests/router.test.js`.
 
 **Verificación:** `npm test` ✔ (5 tests) · `npm run build` ✔ · navegador: las 11 rutas, `#/estilos` y la 404 funcionan; se probó a 1440 px (lateral completa), 1057 px (lateral de íconos) y 390 px (barra inferior y hoja "Más"); fuentes cargadas; sin errores en consola.
+
+## Fase 2 — Datos y mina de demostración ✅ (2026-11-20)
+
+- `src/storage/index.js`: interfaz común documentada (`obtener`, `listar`, `guardar`, `guardarVarios`, `borrar`, `reemplazarTodo`, `exportar`, `estaVacio`, `suscribirse`). Todos los métodos devuelven Promesas, así Firebase entra después sin tocar el resto. Incluye `crearStorage(modo)` y `generarId()`.
+- `src/storage/local.js`: adaptador localStorage (una clave por colección, `canario:v1:<colección>`). Devuelve copias, tolera JSON dañado y avisa los cambios hechos desde otras pestañas.
+- `src/state.js`: estado global con caché en memoria (lecturas sincrónicas para la UI) y suscripción a cambios, filtrable por colección. Carga el seed la primera vez y tiene `restablecerDemo()`. Exporta la instancia `estado`.
+- `src/data/seed.js`: "Mina La Esperanza" con 3 niveles (−20/−40/−60 m), 6 galerías (dura, media y blanda), 17 balizas (boca, acopio, 3 cruces de rampa, puntos intermedios, 6 frentes y 2 refugios) y 16 tramos. 1 ingeniero y 3 cuadrillas con capataz y 4–5 trabajadores cada una, un turno actual y 8 trabajadores ya adentro (escaneos). La config trae los valores por defecto.
+  - Agregados al modelo: `cuadrillas.galeriaIds` (galerías asignadas) y, en `config`, `penalizacionVelocidad` (1,25), `penalizacionFisuras` (20), `pureza {alta: 80, media: 50}` y `nombreMina`. Así ningún número de negocio queda escrito a mano.
+  - Los PIN de demo están en texto plano; en la fase 10 pasan a hash.
+- Configuración: resumen de datos y botón "Restablecer demo" con diálogo de confirmación propio (`ui/components/confirmar.js`) y aviso (`ui/components/aviso.js`).
+- Ajustes de diseño: el botón destructivo pasó a cobre de marca (el rojo queda solo para el semáforo) y se sacó el contorno de foco del `<main>`.
+- Tests nuevos: `storage.test.js`, `state.test.js`, `seed.test.js`.
+
+**Verificación:** `npm test` ✔ (33 tests) · `npm run build` ✔ · navegador: se ven las 12 claves `canario:v1:*` en Local Storage; un cambio sobrevive a la recarga; "Restablecer demo" (con clic real y confirmación) vuelve todo al estado inicial.

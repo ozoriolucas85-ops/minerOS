@@ -3,6 +3,8 @@ import './styles/index.css';
 import { crearRouter } from './router.js';
 import { montarShell } from './ui/shell.js';
 import { pantallas, rutaInicial, buscarPantalla } from './ui/screens/index.js';
+import { estado } from './state.js';
+import { crearStorage } from './storage/index.js';
 
 const shell = montarShell(document.querySelector('#app'), pantallas);
 
@@ -37,4 +39,7 @@ const router = crearRouter({
   },
 });
 
+// Conectar el estado a la persistencia (carga la mina demo la primera vez)
+// y recién después mostrar la primera pantalla.
+await estado.iniciar(crearStorage('local'));
 router.iniciar();

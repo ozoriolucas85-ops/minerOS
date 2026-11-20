@@ -133,10 +133,13 @@ kbd {
 }
 .boton--fantasma:hover { background: var(--color-superficie-2); color: var(--color-texto); }
 
+/* Acción destructiva: cobre de marca (el rojo queda reservado al semáforo). */
 .boton--peligro {
-  background: var(--color-rojo);
-  color: #fff;
+  background: var(--color-marca);
+  border-color: var(--color-marca-claro);
+  color: var(--color-texto);
 }
+.boton--peligro:hover { background: var(--color-marca-claro); color: var(--color-texto); }
 .boton--grande { min-height: var(--tactil-grande); font-size: var(--texto-xl); padding: 0 var(--esp-6); }
 .boton--bloque { width: 100%; }
 .boton--icono { padding: 0; width: var(--tactil-min); }
