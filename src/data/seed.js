@@ -19,7 +19,9 @@ export const CONFIG_POR_DEFECTO = Object.freeze({
   umbrales: { verde: 40, rojo: 15 }, // estabilidad > verde → verde; ≤ rojo → rojo
   penalizacionVelocidad: 1.25, // multiplicador del desgaste si se supera la velocidad máx.
   penalizacionFisuras: 20, // puntos de desgaste que suman las fisuras
-  pureza: { alta: 80, media: 50 }, // clasificación de pureza (%)
+  // Clasificación de pureza (%) y contraste mínimo de densidad (mineral vs. estéril)
+  // para recomendar el modo por densidad; por debajo se sugiere el manual.
+  pureza: { alta: 80, media: 50, contrasteMinimo: 0.1 },
   nombreMina: 'Mina La Esperanza',
 });
 

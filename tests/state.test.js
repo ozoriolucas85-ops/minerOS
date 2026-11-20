@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { crearEstado } from '../src/state.js';
+import { crearEstado, completarConfig } from '../src/state.js';
 import { crearAlmacenLocal } from '../src/storage/local.js';
-import { crearSeed } from '../src/data/seed.js';
+import { crearSeed, CONFIG_POR_DEFECTO } from '../src/data/seed.js';
 import { crearAlmacenFalso } from './ayudas.js';
 
 async function iniciado() {
@@ -85,6 +85,23 @@ describe('estado global', () => {
     await estado.guardar('eventos', { id: 'EV1' });
     expect(fn).toHaveBeenCalled();
     error.mockRestore();
+  });
+
+  it('completa una config vieja con los campos nuevos por defecto', async () => {
+    const storage = crearAlmacenLocal({ almacen: crearAlmacenFalso(), ventana: null });
+    await storage.reemplazarTodo({ config: [{ id: 'general', toleranciaPerdida: 5, pureza: { alta: 90 } }] });
+    const estado = crearEstado({ crearSeed, configPorDefecto: CONFIG_POR_DEFECTO });
+    await estado.iniciar(storage);
+    const config = estado.config();
+    expect(config.toleranciaPerdida).toBe(5);
+    expect(config.pureza).toEqual({ alta: 90, media: 50, contrasteMinimo: 0.1 });
+    expect(config.umbrales).toEqual({ verde: 40, rojo: 15 });
+  });
+
+  it('completarConfig sin datos', () => {
+    expect(completarConfig(null, null)).toBeNull();
+    expect(completarConfig(null, { a: 1 })).toEqual({ a: 1 });
+    expect(completarConfig({ a: 2 }, undefined)).toEqual({ a: 2 });
   });
 
   it('falla si se escribe antes de iniciar', async () => {

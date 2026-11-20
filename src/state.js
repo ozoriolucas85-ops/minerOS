@@ -6,9 +6,25 @@
 import { COLECCIONES } from './storage/index.js';
 
 /**
- * @param {{ crearSeed: () => Record<string, object[]> }} opciones
+ * Completa una config guardada con los valores por defecto (un nivel de
+ * profundidad), para que los campos agregados en versiones nuevas existan.
  */
-export function crearEstado({ crearSeed } = {}) {
+export function completarConfig(guardada, porDefecto) {
+  if (!guardada) return porDefecto ? structuredClone(porDefecto) : null;
+  if (!porDefecto) return guardada;
+  const resultado = { ...structuredClone(porDefecto), ...guardada };
+  for (const [clave, valor] of Object.entries(porDefecto)) {
+    if (valor && typeof valor === 'object' && !Array.isArray(valor)) {
+      resultado[clave] = { ...valor, ...(guardada[clave] ?? {}) };
+    }
+  }
+  return resultado;
+}
+
+/**
+ * @param {{ crearSeed: () => Record<string, object[]>, configPorDefecto?: object }} opciones
+ */
+export function crearEstado({ crearSeed, configPorDefecto } = {}) {
   let storage = null;
   /** @type {Record<string, Map<string, object>>} */
   const cache = {};
@@ -77,7 +93,7 @@ export function crearEstado({ crearSeed } = {}) {
 
     /** La configuración general (documento único con id "general"). */
     config() {
-      return cache.config.get('general') ?? null;
+      return completarConfig(cache.config.get('general'), configPorDefecto);
     },
 
     async guardar(coleccion, objeto) {
@@ -134,5 +150,5 @@ export function crearEstado({ crearSeed } = {}) {
 }
 
 // Instancia única que usa la aplicación (se conecta al storage en main.js).
-import { crearSeed } from './data/seed.js';
-export const estado = crearEstado({ crearSeed });
+import { crearSeed, CONFIG_POR_DEFECTO } from './data/seed.js';
+export const estado = crearEstado({ crearSeed, configPorDefecto: CONFIG_POR_DEFECTO });
