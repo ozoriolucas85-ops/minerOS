@@ -4,6 +4,7 @@ import { estado } from '../state.js';
 import { indexarPorId } from '../domain/utilidades.js';
 import { ubicarPersonas, estadoDePersona, escaneosDe } from '../domain/ubicacion.js';
 import { crearGrafo, rutaDeSalida, hiloDeAriadna, caminoDelHilo, volverPorElHilo } from '../domain/rutas.js';
+import { ahora as relojAhora } from '../reloj.js';
 
 export function nodosPorId() {
   return indexarPorId(estado.listar('nodos'));
@@ -14,7 +15,7 @@ export function galeriasPorId() {
 }
 
 /** Ubicación de todos los usuarios (adentro, dónde, sin señal). */
-export function ubicacionesActuales(ahora = Date.now()) {
+export function ubicacionesActuales(ahora = relojAhora()) {
   return ubicarPersonas({
     escaneos: estado.listar('escaneos'),
     usuarios: estado.listar('usuarios'),

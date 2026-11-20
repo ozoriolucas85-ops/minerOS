@@ -25,6 +25,9 @@ export const CONFIG_POR_DEFECTO = Object.freeze({
   // para recomendar el modo por densidad; por debajo se sugiere el manual.
   pureza: { alta: 80, media: 50, contrasteMinimo: 0.1 },
   nombreMina: 'Mina La Esperanza',
+  // Simulador: a velocidad 1x pasan 12 s de turno por segundo real (8 h en 40 min);
+  // 5x → 8 min y 20x → 2 min.
+  simulador: { segundosPorSegundo: 12, minutosEntreReescaneos: 30 },
 });
 
 export const NIVELES = [

@@ -1,0 +1,49 @@
+/* Simulador de turno y barra flotante. */
+
+.simulador__cabeza { justify-content: space-between; align-items: flex-end; }
+.simulador__reloj { font-size: var(--texto-3xl); color: var(--color-acento); }
+.simulador__reloj .cifra__unidad { margin-left: var(--esp-2); }
+
+.progreso-sim { position: relative; height: 16px; margin: var(--esp-5) 0 var(--esp-6); background: var(--color-fondo-hundido); border: 1px solid var(--color-borde-fuerte); border-radius: 8px; }
+.progreso-sim__relleno { height: 100%; border-radius: 8px; background: linear-gradient(90deg, var(--color-marca), var(--color-acento)); transition: width var(--dur-media) linear; }
+.progreso-sim__hito { position: absolute; top: -6px; bottom: -6px; width: 3px; margin-left: -1px; background: var(--color-borde-fuerte); }
+.progreso-sim__hito span { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 4px; white-space: nowrap; font-size: var(--texto-xs); color: var(--color-texto-3); }
+.progreso-sim__hito--pasado { background: var(--color-oro); }
+.progreso-sim__hito--pasado span { color: var(--color-oro); }
+@media (max-width: 767px) { .progreso-sim__hito span { display: none; } }
+
+.segmentado { display: inline-flex; border: 1px solid var(--color-borde-fuerte); border-radius: var(--radio-md); overflow: hidden; }
+.segmentado__opcion {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 76px; min-height: var(--tactil-min);
+  padding: 0 var(--esp-3); border: 0; background: var(--color-superficie-2); color: var(--color-texto-2); cursor: pointer;
+  font-family: var(--fuente-titulos); font-weight: var(--peso-titulo); font-size: var(--texto-lg);
+}
+.segmentado__opcion small { font-family: var(--fuente-texto); font-weight: var(--peso-normal); font-size: var(--texto-xs); color: var(--color-texto-3); }
+.segmentado__opcion + .segmentado__opcion { border-left: 1px solid var(--color-borde-fuerte); }
+.segmentado__opcion[aria-checked='true'] { background: var(--color-acento); color: var(--color-texto-sobre-acento); }
+.segmentado__opcion[aria-checked='true'] small { color: var(--color-texto-sobre-acento); }
+
+.grilla--sim { grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); align-items: start; }
+.bitacora { list-style: none; margin: 0; padding: 0; max-height: 420px; overflow-y: auto; display: grid; }
+.bitacora li { display: grid; grid-template-columns: 3.5em 1fr; gap: var(--esp-3); padding: var(--esp-2) 0; border-bottom: 1px solid var(--color-borde); font-size: var(--texto-sm); }
+.bitacora .mono { color: var(--color-texto-3); }
+.bitacora__alerta { color: var(--color-acento-hover); font-weight: var(--peso-medio); }
+.guion { margin: 0; padding-left: var(--esp-5); display: grid; gap: var(--esp-2); font-size: var(--texto-sm); }
+
+.barra-sim {
+  position: fixed; right: var(--esp-4); bottom: var(--esp-4); z-index: var(--z-banner);
+  display: flex; align-items: center; gap: var(--esp-2); padding: var(--esp-2) var(--esp-3);
+  background: var(--color-superficie-2); border: 1px solid var(--color-acento); border-radius: var(--radio-pildora); box-shadow: var(--sombra-3);
+}
+.barra-sim__titulo { display: flex; align-items: center; gap: var(--esp-1); color: var(--color-acento); text-decoration: none; font-family: var(--fuente-titulos); font-weight: var(--peso-titulo); }
+.barra-sim__titulo svg { width: 20px; height: 20px; }
+.barra-sim__reloj { font-size: var(--texto-lg); }
+.barra-sim__progreso { width: 80px; height: 6px; border-radius: 3px; background: var(--color-fondo-hundido); overflow: hidden; }
+.barra-sim__progreso span { display: block; height: 100%; background: var(--color-acento); }
+.barra-sim__boton { min-height: 36px; padding: 0 var(--esp-2); font-size: var(--texto-md); }
+.barra-sim__boton--activa { background: var(--color-acento-tenue); color: var(--color-acento); }
+.barra-sim__fin { color: var(--color-oro); font-weight: var(--peso-medio); }
+@media (max-width: 767px) {
+  .barra-sim { left: var(--esp-2); right: var(--esp-2); bottom: calc(var(--alto-barra-inferior) + env(safe-area-inset-bottom) + var(--esp-2)); justify-content: space-between; }
+  .barra-sim__titulo span, .barra-sim__progreso { display: none; }
+}

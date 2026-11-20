@@ -103,13 +103,15 @@ export function agruparPorGaleria(ubicaciones) {
 
 /**
  * Valida un escaneo: la baliza tiene que existir y no pertenecer a una
- * galería bloqueada (en rojo la baliza rechaza escaneos).
+ * galería bloqueada (en rojo la baliza rechaza la ENTRADA). Quien ya está
+ * adentro de esa galería puede seguir escaneando para salir.
+ * @param {{ nodoId: string, nodosPorId: Map, galeriasPorId: Map, galeriaActualId?: string|null }} datos
  */
-export function validarEscaneo({ nodoId, nodosPorId, galeriasPorId }) {
+export function validarEscaneo({ nodoId, nodosPorId, galeriasPorId, galeriaActualId = null }) {
   const nodo = nodosPorId.get(nodoId);
   if (!nodo) throw new ErrorDeValidacion('Baliza desconocida: el código no corresponde a ningún punto de la mina.');
   const galeria = nodo.galeriaId ? galeriasPorId.get(nodo.galeriaId) : null;
-  if (galeria?.bloqueada) {
+  if (galeria?.bloqueada && galeria.id !== galeriaActualId) {
     throw new ErrorDeValidacion(`Acceso rechazado: ${galeria.nombre} está bloqueada por PELIGRO DE DERRUMBE.`);
   }
   return nodo;

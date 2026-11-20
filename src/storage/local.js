@@ -86,6 +86,16 @@ export function crearAlmacenLocal({ almacen, prefijo = PREFIJO_POR_DEFECTO, vent
       return true;
     },
 
+    async borrarDonde(coleccion, filtro) {
+      const mapa = leer(coleccion);
+      const ids = Object.keys(mapa).filter((id) => filtro(mapa[id]));
+      if (!ids.length) return 0;
+      ids.forEach((id) => delete mapa[id]);
+      escribir(coleccion, mapa);
+      avisar({ coleccion, tipo: 'borrar' });
+      return ids.length;
+    },
+
     async reemplazarTodo(datos) {
       // Borra todas las colecciones de Canario y escribe las nuevas.
       const claves = [];

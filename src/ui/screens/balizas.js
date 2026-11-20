@@ -10,6 +10,7 @@ import { usuarioActualId } from '../../sesion.js';
 import { icono } from '../components/iconos.js';
 import { avisar } from '../components/aviso.js';
 import { esc, hora, nombreNivel } from '../formato.js';
+import { ahora } from '../../reloj.js';
 
 const NOMBRE_TIPO = { boca: 'Boca de mina', acopio: 'Acopio', cruce: 'Cruce / punto', frente: 'Frente', refugio: 'Refugio' };
 
@@ -100,7 +101,7 @@ function renderEscanear(contenedor) {
       resultado.innerHTML = resultadoHtml({
         ok: true,
         titulo: `Registrado: ${nodo.nombre}`,
-        detalle: `${hora(Date.now())} · ${adentro ? 'adentro de la mina' : 'afuera: la chapa volvió al tablero'}`,
+        detalle: `${hora(ahora())} · ${adentro ? 'adentro de la mina' : 'afuera: la chapa volvió al tablero'}`,
         ruta: ruta && ruta.camino.length > 1 ? describirCamino(ruta.camino) : null,
       });
     } catch (error) {

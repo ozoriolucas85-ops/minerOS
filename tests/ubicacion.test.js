@@ -122,6 +122,11 @@ describe('validarEscaneo', () => {
     expect(() => validarEscaneo({ nodoId: 'G5-P', nodosPorId, galeriasPorId })).toThrow(/PELIGRO DE DERRUMBE/);
   });
 
+  it('quien ya está adentro de la galería bloqueada puede escanear para salir', () => {
+    expect(validarEscaneo({ nodoId: 'G5-P', nodosPorId, galeriasPorId, galeriaActualId: 'G5' }).id).toBe('G5-P');
+    expect(() => validarEscaneo({ nodoId: 'G5-P', nodosPorId, galeriasPorId, galeriaActualId: 'G3' })).toThrow(/rechazado/);
+  });
+
   it('rechaza códigos desconocidos', () => {
     expect(() => validarEscaneo({ nodoId: 'ZZZ', nodosPorId, galeriasPorId })).toThrow(ErrorDeValidacion);
   });

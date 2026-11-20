@@ -6,12 +6,13 @@ import { calcularProductividad, evolucionPorTurno, rankingTrabajadores, pesoEnAc
 import { resumenCarga } from '../domain/traslados.js';
 import { turnoActual } from './turnos.js';
 import { ubicacionesActuales } from './ubicacion.js';
+import { ahora as relojAhora } from '../reloj.js';
 
 /**
  * Productividad en un período: un turno, o los turnos entre dos fechas (YYYY-MM-DD).
  * @param {{ turnoId?: string, desde?: string, hasta?: string, ahora?: number }} filtros
  */
-export function productividadDelPeriodo({ turnoId, desde, hasta, ahora = Date.now() } = {}) {
+export function productividadDelPeriodo({ turnoId, desde, hasta, ahora = relojAhora() } = {}) {
   const todos = estado.listar('turnos').sort((a, b) => a.inicio - b.inicio);
   const turnos = turnoId
     ? todos.filter((t) => t.id === turnoId)
@@ -45,7 +46,7 @@ export function productividadDelPeriodo({ turnoId, desde, hasta, ahora = Date.no
 }
 
 /** Datos del panel general del turno en curso. */
-export function resumenDelPanel(ahora = Date.now()) {
+export function resumenDelPanel(ahora = relojAhora()) {
   const turno = turnoActual(ahora);
   const nodosPorId = indexarPorId(estado.listar('nodos'));
   const config = estado.config();

@@ -120,6 +120,15 @@ export function crearEstado({ crearSeed, configPorDefecto } = {}) {
       return borrado;
     },
 
+    /** Borra todos los elementos que cumplen el filtro. Devuelve cuántos. */
+    async borrarDonde(coleccion, filtro) {
+      exigirIniciado();
+      const cantidad = await storage.borrarDonde(coleccion, filtro);
+      for (const [id, o] of cache[coleccion]) if (filtro(o)) cache[coleccion].delete(id);
+      if (cantidad) avisar({ coleccion, tipo: 'borrar' });
+      return cantidad;
+    },
+
     /** Vuelve todo al estado inicial de la mina demo. */
     async restablecerDemo() {
       exigirIniciado();

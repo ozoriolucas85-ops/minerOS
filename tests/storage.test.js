@@ -88,3 +88,13 @@ describe('almacén local', () => {
     expect(generarId('av')).not.toBe(a);
   });
 });
+
+describe('borrarDonde', () => {
+  it('borra los que cumplen el filtro y avisa', async () => {
+    const s = crearAlmacenLocal({ almacen: crearAlmacenFalso(), ventana: null });
+    await s.guardarVarios('escaneos', [{ id: 'a', simulado: true }, { id: 'b', simulado: false }, { id: 'c', simulado: true }]);
+    expect(await s.borrarDonde('escaneos', (e) => e.simulado)).toBe(2);
+    expect(await s.listar('escaneos')).toEqual([{ id: 'b', simulado: false }]);
+    expect(await s.borrarDonde('escaneos', (e) => e.simulado)).toBe(0);
+  });
+});

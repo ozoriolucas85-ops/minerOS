@@ -9,6 +9,7 @@
 //   guardar(coleccion, objeto)      → Promise<objeto>      (alta o modificación por id)
 //   guardarVarios(coleccion, lista) → Promise<objeto[]>
 //   borrar(coleccion, id)           → Promise<boolean>
+//   borrarDonde(coleccion, filtro)  → Promise<number>      (cantidad borrada)
 //   reemplazarTodo(datos)           → Promise<void>        ({coleccion: objeto[]})
 //   exportar()                      → Promise<{coleccion: objeto[]}>
 //   estaVacio()                     → Promise<boolean>

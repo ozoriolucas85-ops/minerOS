@@ -12,9 +12,10 @@ import {
   validarDesbloqueo,
   desbloquear,
 } from '../domain/semaforo.js';
-import { ErrorDeValidacion } from '../domain/utilidades.js';
+import { ErrorDeValidacion, redondear } from '../domain/utilidades.js';
 import { verificarPin } from './autenticacion.js';
 import { turnoActual } from './turnos.js';
+import { ahora as relojAhora } from '../reloj.js';
 
 function exigirGaleria(galeriaId) {
   const galeria = estado.obtener('galerias', galeriaId);
@@ -61,7 +62,7 @@ async function guardarResultado(resultado, registro, ahora, extra) {
  * Registra un avance de excavación (metros y si se vieron fisuras).
  * @param {{ metros: number, fisuras?: boolean, usuarioId?: string, ahora?: number, simulado?: boolean }} datos
  */
-export async function registrarAvance(galeriaId, { metros, fisuras = false, usuarioId = usuarioActualId(), ahora = Date.now(), simulado = false }) {
+export async function registrarAvance(galeriaId, { metros, fisuras = false, usuarioId = usuarioActualId(), ahora = relojAhora(), simulado = false }) {
   const galeria = exigirGaleria(galeriaId);
   const resultado = aplicarAvance(galeria, { metros, fisuras }, estado.config(), ahora);
   const avance = {
@@ -79,7 +80,7 @@ export async function registrarAvance(galeriaId, { metros, fisuras = false, usua
 }
 
 /** Registra un apuntalamiento: metros sin apuntalar a 0 y sin fisuras. */
-export async function registrarApuntalamiento(galeriaId, { usuarioId = usuarioActualId(), ahora = Date.now(), simulado = false } = {}) {
+export async function registrarApuntalamiento(galeriaId, { usuarioId = usuarioActualId(), ahora = relojAhora(), simulado = false } = {}) {
   const galeria = exigirGaleria(galeriaId);
   const resultado = aplicarApuntalamiento(galeria, estado.config(), ahora);
   const avance = {
@@ -97,13 +98,13 @@ export async function registrarApuntalamiento(galeriaId, { usuarioId = usuarioAc
   await guardarResultado(resultado, avance, ahora, { simulado });
   await estado.guardar(
     'eventos',
-    nuevoEvento('apuntalamiento', galeriaId, `Apuntalamiento registrado en ${galeria.nombre} (${galeria.metrosSinApuntalar} m).`, ahora, { simulado }),
+    nuevoEvento('apuntalamiento', galeriaId, `Apuntalamiento registrado en ${galeria.nombre} (${String(redondear(galeria.metrosSinApuntalar, 2)).replace('.', ',')} m).`, ahora, { simulado }),
   );
   return resultado;
 }
 
 /** Reporta fisuras en una galería. */
-export async function registrarFisuras(galeriaId, { usuarioId = usuarioActualId(), ahora = Date.now(), simulado = false } = {}) {
+export async function registrarFisuras(galeriaId, { usuarioId = usuarioActualId(), ahora = relojAhora(), simulado = false } = {}) {
   const galeria = exigirGaleria(galeriaId);
   const resultado = reportarFisuras(galeria, estado.config(), ahora);
   await guardarResultado(resultado, null, ahora, { simulado });
@@ -119,7 +120,7 @@ export async function registrarFisuras(galeriaId, { usuarioId = usuarioActualId(
  * con un apuntalamiento registrado después del bloqueo.
  * @returns {Promise<{ valido: boolean, errores: string[] }>}
  */
-export async function desbloquearGaleria(galeriaId, { ingenieroId, pinIngeniero, capatazId, pinCapataz, ahora = Date.now(), simulado = false }) {
+export async function desbloquearGaleria(galeriaId, { ingenieroId, pinIngeniero, capatazId, pinCapataz, ahora = relojAhora(), simulado = false }) {
   const galeria = exigirGaleria(galeriaId);
   const ingeniero = await verificarPin(ingenieroId, pinIngeniero);
   const capataz = await verificarPin(capatazId, pinCapataz);

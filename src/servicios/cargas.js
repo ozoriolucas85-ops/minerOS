@@ -16,6 +16,7 @@ import {
 import { purezaPorDensidad, purezaManual, clasificarPureza, mineralUtil } from '../domain/pureza.js';
 import { crearGrafo } from '../domain/rutas.js';
 import { turnoActual } from './turnos.js';
+import { ahora as relojAhora } from '../reloj.js';
 
 function exigirCarga(cargaId) {
   const carga = estado.obtener('cargas', cargaId);
@@ -33,7 +34,7 @@ export function buscarCargaPorCodigo(codigo) {
  * Crea una carga nueva al salir del frente. No se permite en galerías bloqueadas.
  * @returns {Promise<object>} la carga creada (con su código único)
  */
-export async function crearCarga({ cuadrillaId, galeriaId, mineral, volumen, usuarioId = usuarioActualId(), ahora = Date.now(), simulado = false }) {
+export async function crearCarga({ cuadrillaId, galeriaId, mineral, volumen, usuarioId = usuarioActualId(), ahora = relojAhora(), simulado = false }) {
   validarNuevaCarga({ cuadrillaId, galeriaId, mineral, volumen });
   const galeria = estado.obtener('galerias', galeriaId);
   if (!galeria) throw new ErrorDeValidacion('La galería no existe.');
@@ -72,7 +73,7 @@ export function puntosDeCarga(carga) {
  * tolerancia, queda un evento "sospechoso" con la cuadrilla y la hora.
  * @returns {Promise<{ carga: object, tramo: object|null }>}
  */
-export async function registrarPesaje(cargaId, { nodoId, peso, ahora = Date.now(), usuarioId = usuarioActualId(), simulado = false }) {
+export async function registrarPesaje(cargaId, { nodoId, peso, ahora = relojAhora(), usuarioId = usuarioActualId(), simulado = false }) {
   const carga = exigirCarga(cargaId);
   const nodosPorId = indexarPorId(estado.listar('nodos'));
   validarPesaje(carga, { nodoId, peso }, nodosPorId);

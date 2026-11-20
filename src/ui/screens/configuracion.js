@@ -1,4 +1,5 @@
 import { estado } from '../../state.js';
+import { simulador } from '../../sim/simulador.js';
 import { confirmar } from '../components/confirmar.js';
 import { avisar } from '../components/aviso.js';
 import { icono } from '../components/iconos.js';
@@ -54,7 +55,7 @@ function dibujar(contenedor) {
       peligro: true,
     });
     if (!ok) return;
-    await estado.restablecerDemo();
+    await simulador.reiniciarDemo(); // también detiene el simulador y vuelve el reloj a la hora real
     avisar('Se restableció la mina demo.');
   });
 }

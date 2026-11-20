@@ -6,6 +6,7 @@ import { pantallas, rutaInicial, buscarPantalla } from './ui/screens/index.js';
 import { estado } from './state.js';
 import { crearStorage } from './storage/index.js';
 import { montarAlertas } from './ui/components/alertas.js';
+import { montarBarraSimulador } from './ui/components/barraSimulador.js';
 
 const shell = montarShell(document.querySelector('#app'), pantallas);
 
@@ -44,4 +45,5 @@ const router = crearRouter({
 // y recién después mostrar la primera pantalla.
 await estado.iniciar(crearStorage('local'));
 montarAlertas(document.querySelector('#banners'));
+montarBarraSimulador();
 router.iniciar();

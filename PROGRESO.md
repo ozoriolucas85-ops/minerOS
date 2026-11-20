@@ -155,3 +155,33 @@ Todo `src/domain/` es puro: recibe datos y `config`, devuelve resultados, sin DO
 - Vistas a 390 px revisadas.
 
 **Lista "Listo cuando":** ✔ el panel resume la mina de un vistazo · ✔ los gráficos se actualizan con datos nuevos.
+
+## Fase 9 — Simulador de turno ✅ (2026-11-20)
+
+- **Reloj de la app (`src/reloj.js`):** `ahora()` = hora real + desfase (guardado en `canario:reloj`). Servicios y pantallas usan `ahora()` en lugar de `Date.now()`, así "hace cuánto", "sin señal" y el turno en curso siguen al tiempo simulado. Borrar lo simulado o reiniciar la demo vuelve a la hora real.
+- **Velocidad:** `config.simulador.segundosPorSegundo = 12`. A 1x el turno de 8 h dura 40 min, a 5x 8 min y a **20x, 2 min** (como pide el guion de la presentación: "iniciar el simulador en 20x").
+- **`src/sim/plan.js` (puro, testeado):** plan del turno. Los trabajadores entran escalonados, van a su frente (cada cuadrilla repartida entre sus galerías), re-escanean cada ~30 min y salen al final. Cada cuadrilla saca cargas cada ~50 min; hay avances de excavación por hora sin pasar la velocidad máxima. **Guion:**
+  - 00:20 — la primera carga de la cuadrilla Norte pierde 6 % en un tramo.
+  - 02:00–05:00 — Elena Castro no re-escanea y aparece "sin señal".
+  - 04:00 — G3 pasa a amarillo y su gente evacúa por la ruta hasta la boca.
+  - 05:00 — G3 se apuntala y la cuadrilla vuelve.
+  - 06:40 — G5 llega a rojo y queda bloqueada; una persona queda adentro como prioridad de rescate.
+  - 07:20 — todos salen.
+- **`src/sim/simulador.js`:** motor con reloj acelerado y cola de eventos. Usa los **mismos servicios** que una persona (`iniciarTurno`, `registrarEscaneo`, `crearCarga`, `registrarPesaje`, `registrarAvance`, `registrarApuntalamiento`), sin atajos. Hace apuntalamientos de rutina cuando la estabilidad bajaría de 50, recorre los túneles baliza por baliza (una evacuación cancela el viaje en curso) y lleva una bitácora. Todo lleva `simulado: true`. Antes de empezar guarda una copia de las galerías. "Borrar datos simulados" borra lo simulado (`borrarDonde`, nuevo en storage y estado), restaura las galerías y vuelve el reloj a la hora real. "Reiniciar datos demo" vuelve todo al seed.
+- **Pantalla Simulador:** reloj del turno, barra de avance con los hitos del guion, velocidad 1x/5x/20x (con la duración real de cada una), iniciar/pausar/reanudar, bitácora, guion explicado (incluye cómo desbloquear G5 en vivo) y los dos botones de borrado con confirmación.
+- **Barra flotante** del simulador en todas las pantallas (hora, avance, pausar y velocidad) para seguir la demo desde el mapa, las chapas o las galerías.
+- **Corrección de dominio:** una galería bloqueada rechaza la **entrada**; quien ya está adentro puede escanear para salir (`validarEscaneo` recibe `galeriaActualId`). Antes, alguien atrapado no podía registrar su salida.
+- `servicios/turnos.js`: `iniciarTurno` (registra el turno y pone en 0 el avance del turno de cada galería); `turnoActual` elige el que empezó último si dos se superponen.
+- Configuración → "Restablecer demo" también detiene el simulador y vuelve el reloj a la hora real.
+- Tests nuevos: `simulador.test.js` (un turno completo en Node: carga sospechosa de 6 % de la cuadrilla Norte, G3 de verde a amarillo con evacuación total, G5 bloqueada con rescate, cargas al acopio, todo marcado como simulado, todos afuera al final y borrado que deja las galerías y el reloj como estaban), `borrarDonde` y escaneo de salida desde una galería bloqueada.
+
+**Verificación:** `npm test` ✔ (206 tests) · `npm run build` ✔ · navegador, corrida real a 20x con clics:
+- El turno completo duró unos 2 minutos.
+- 00:28: "Traslado sospechoso CAN-0087: perdió 6,0 %".
+- A las 04:36, en el tablero de chapas: banner EVACUACIÓN de G3, G3 con 0 chapas, contador en 10 y Elena "sin señal".
+- 07:35 (corrida anterior): G5 rayada y cerrada en el mapa, con el punto de rescate parpadeando.
+- 08:00: "Turno terminado".
+- Después, en la ficha de G5: apuntalamiento + Laura Benítez (1111) + Rubén Sosa (4444) → reabierta, verde y con el historial de quién y cuándo.
+- "Borrar datos simulados" deja 0 simulados, las galerías como antes (G3 1,5 m, G5 0,8 m) y el reloj en hora real, sin tocar las 86 cargas reales.
+
+**Lista "Listo cuando":** ✔ una corrida completa muestra todas las funciones en unos 2 minutos · ✔ después se puede desbloquear G5 con las dos llaves en vivo.
