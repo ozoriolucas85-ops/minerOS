@@ -1,0 +1,124 @@
+/*
+ * Canario — tokens de diseño.
+ * Todos los valores visuales viven acá. Los componentes usan solo variables.
+ * Paleta aprobada (fase 1): roca casi negra, pizarra cálida, acento ámbar
+ * "luz de casco", cobre/terracota para marca y oro viejo como secundario.
+ * Verde, amarillo y rojo están RESERVADOS para el semáforo.
+ */
+:root {
+  /* ── Fondos y superficies (roca) ───────────────────────────── */
+  --color-fondo: #12100e;
+  --color-fondo-hundido: #0b0a09;
+  --color-superficie: #1c1916;
+  --color-superficie-2: #26221e;
+  --color-superficie-3: #332d27;
+  --color-borde: #3d362f;
+  --color-borde-fuerte: #5a5047;
+
+  /* ── Texto ─────────────────────────────────────────────────── */
+  --color-texto: #f2ead8; /* pergamino */
+  --color-texto-2: #cdbfa6; /* hueso */
+  --color-texto-3: #8f8475; /* polvo */
+  --color-texto-sobre-acento: #1a1209;
+
+  /* ── Acento: ámbar luz de casco (acciones, foco, links) ───── */
+  --color-acento: #ee9a3a;
+  --color-acento-hover: #ffb05a;
+  --color-acento-presionado: #c97d27;
+  --color-acento-tenue: rgba(238, 154, 58, 0.14);
+  --color-acento-brillo: rgba(238, 154, 58, 0.35);
+
+  /* ── Marca: cobre / terracota (logo, menú activo, chips) ──── */
+  --color-marca: #a84b24;
+  --color-marca-claro: #c4612f;
+  --color-marca-oscuro: #6e2f15;
+  --color-marca-tenue: rgba(168, 75, 36, 0.22);
+
+  /* ── Secundario: oro viejo (hilo de Ariadna, destacados) ──── */
+  --color-oro: #e8c89a;
+  --color-oro-tenue: rgba(232, 200, 154, 0.16);
+
+  /* ── Semáforo (SOLO para estados) ──────────────────────────── */
+  --color-verde: #2fbf71;
+  --color-verde-tenue: rgba(47, 191, 113, 0.16);
+  --color-verde-texto: #6fe0a3;
+  --color-amarillo: #ffd60a;
+  --color-amarillo-tenue: rgba(255, 214, 10, 0.16);
+  --color-amarillo-texto: #ffe466;
+  --color-rojo: #e5383b;
+  --color-rojo-tenue: rgba(229, 56, 59, 0.18);
+  --color-rojo-texto: #ff7a7c;
+  --color-sin-senal: #77706a; /* chapa gris "sin señal" (neutro, no es semáforo) */
+
+  /* ── Tipografía ────────────────────────────────────────────── */
+  --fuente-titulos: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --fuente-texto: 'Barlow', system-ui, sans-serif;
+  --fuente-mono: 'JetBrains Mono', ui-monospace, 'Consolas', monospace;
+  --fuente-logo: 'Saira Stencil One', 'Barlow Condensed', sans-serif;
+
+  --peso-normal: 400;
+  --peso-medio: 500;
+  --peso-titulo: 600;
+
+  --texto-xs: 0.8125rem; /* 13px */
+  --texto-sm: 0.9375rem; /* 15px */
+  --texto-md: 1.0625rem; /* 17px — base, legible con guantes */
+  --texto-lg: 1.25rem;
+  --texto-xl: 1.625rem;
+  --texto-2xl: 2.125rem;
+  --texto-3xl: 2.875rem;
+
+  --interlineado: 1.5;
+  --interlineado-titulo: 1.1;
+  --espaciado-titulos: 0.02em;
+  --espaciado-mayusculas: 0.08em;
+
+  /* ── Espacios ──────────────────────────────────────────────── */
+  --esp-1: 0.25rem;
+  --esp-2: 0.5rem;
+  --esp-3: 0.75rem;
+  --esp-4: 1rem;
+  --esp-5: 1.5rem;
+  --esp-6: 2rem;
+  --esp-7: 3rem;
+  --esp-8: 4rem;
+
+  /* ── Radios ────────────────────────────────────────────────── */
+  --radio-sm: 6px;
+  --radio-md: 10px;
+  --radio-lg: 16px;
+  --radio-xl: 24px;
+  --radio-pildora: 999px;
+
+  /* ── Tamaños táctiles y layout ─────────────────────────────── */
+  --tactil-min: 48px; /* mínimo para usar con guantes */
+  --tactil-grande: 56px;
+  --ancho-lateral: 248px;
+  --alto-barra-inferior: 68px;
+  --alto-cabecera: 64px;
+  --ancho-contenido: 1280px;
+
+  /* ── Bordes, sombras, foco ─────────────────────────────────── */
+  --borde-fino: 1px solid var(--color-borde);
+  --sombra-1: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --sombra-2: 0 6px 18px rgba(0, 0, 0, 0.45);
+  --sombra-3: 0 14px 40px rgba(0, 0, 0, 0.6);
+  --sombra-brillo-acento: 0 0 0 1px var(--color-acento-brillo), 0 0 24px var(--color-acento-tenue);
+  --foco: 0 0 0 3px var(--color-fondo), 0 0 0 5px var(--color-acento);
+
+  /* ── Movimiento ────────────────────────────────────────────── */
+  --dur-rapida: 120ms;
+  --dur-media: 220ms;
+  --dur-lenta: 400ms;
+  --curva: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --parpadeo: 1s;
+
+  /* ── Capas ─────────────────────────────────────────────────── */
+  --z-navegacion: 50;
+  --z-banner: 80;
+  --z-modal: 100;
+  --z-toast: 120;
+
+  /* ── Puntos de quiebre (referencia; en media queries se usan literales) ──
+     celular < 768px · tablet 768–1099px · escritorio ≥ 1100px */
+}

@@ -1,8 +1,40 @@
-// Arranque de la aplicación. El router y las pantallas se agregan en la fase 1.
-const app = document.querySelector('#app');
-app.innerHTML = `
-  <main style="font-family: system-ui, sans-serif; padding: 2rem;">
-    <h1>Canario</h1>
-    <p>Sistema de monitoreo de minas y excavaciones. Base del proyecto lista.</p>
-  </main>
-`;
+// Arranque de la aplicación: estilos, cáscara y router.
+import './styles/index.css';
+import { crearRouter } from './router.js';
+import { montarShell } from './ui/shell.js';
+import { pantallas, rutaInicial, buscarPantalla } from './ui/screens/index.js';
+
+const shell = montarShell(document.querySelector('#app'), pantallas);
+
+let limpiarPantallaAnterior = null;
+
+function mostrarNoEncontrada(contenedor, ruta) {
+  contenedor.innerHTML = `
+    <div class="vacio">
+      <h2>Pantalla no encontrada</h2>
+      <p>No existe la sección <span class="mono">#/${ruta}</span>.</p>
+      <a class="boton boton--primario" href="#/${rutaInicial}">Ir al panel</a>
+    </div>`;
+}
+
+const router = crearRouter({
+  rutaInicial,
+  resolver: buscarPantalla,
+  alCambiar(pantalla, { ruta, params }) {
+    if (typeof limpiarPantallaAnterior === 'function') limpiarPantallaAnterior();
+    limpiarPantallaAnterior = null;
+
+    const contenedor = shell.contenedor;
+    if (!pantalla) {
+      shell.activar(ruta, 'No encontrada');
+      mostrarNoEncontrada(contenedor, ruta);
+      return;
+    }
+    shell.activar(pantalla.ruta, pantalla.titulo);
+    limpiarPantallaAnterior = pantalla.modulo.render(contenedor, { params }) ?? null;
+    contenedor.focus({ preventScroll: true });
+    window.scrollTo(0, 0);
+  },
+});
+
+router.iniciar();
