@@ -25,7 +25,7 @@ export function navegar(ruta) {
 /**
  * Crea el router.
  * @param {{
- *   rutaInicial: string,
+ *   rutaInicial: string | (() => string),
  *   resolver: (ruta: string) => object | undefined,
  *   alCambiar: (pantalla: object | undefined, info: {ruta: string, params: string[]}) => void
  * }} opciones
@@ -34,8 +34,9 @@ export function crearRouter({ rutaInicial, resolver, alCambiar }) {
   function procesar() {
     const info = interpretarHash(location.hash);
     if (!info.ruta) {
-      history.replaceState(null, '', `#/${rutaInicial}`);
-      info.ruta = rutaInicial;
+      const inicial = typeof rutaInicial === 'function' ? rutaInicial() : rutaInicial;
+      history.replaceState(null, '', `#/${inicial}`);
+      info.ruta = inicial;
     }
     alCambiar(resolver(info.ruta), info);
   }

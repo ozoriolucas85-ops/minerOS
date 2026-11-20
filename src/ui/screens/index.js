@@ -21,15 +21,14 @@ export const pantallas = [
   { ruta: 'cargas', titulo: 'Cargas', tituloCorto: 'Cargas', icono: 'cargas', grupo: 'Material', modulo: cargas },
   { ruta: 'pureza', titulo: 'Pureza', tituloCorto: 'Pureza', icono: 'pureza', grupo: 'Material', modulo: pureza },
   { ruta: 'productividad', titulo: 'Productividad', tituloCorto: 'Productividad', icono: 'productividad', grupo: 'Material', modulo: productividad },
-  { ruta: 'balizas', titulo: 'Balizas', tituloCorto: 'Balizas', icono: 'balizas', grupo: 'Ubicación', modulo: balizas },
+  { ruta: 'balizas', titulo: 'Balizas', tituloCorto: 'Balizas', icono: 'balizas', grupo: 'Ubicación', modulo: balizas, inferior: true },
   { ruta: 'simulador', titulo: 'Simulador', tituloCorto: 'Simulador', icono: 'simulador', grupo: 'Sistema', modulo: simulador },
   { ruta: 'configuracion', titulo: 'Configuración', tituloCorto: 'Config.', icono: 'configuracion', grupo: 'Sistema', modulo: configuracion },
-  { ruta: 'ingreso', titulo: 'Ingreso', tituloCorto: 'Ingreso', icono: 'ingreso', grupo: 'Sistema', modulo: ingreso },
+  { ruta: 'ingreso', titulo: 'Ingreso', tituloCorto: 'Ingreso', icono: 'ingreso', grupo: 'Sistema', modulo: ingreso, oculta: true },
   // Página interna para revisar el sistema visual (no aparece en el menú).
   { ruta: 'estilos', titulo: 'Sistema de diseño', tituloCorto: 'Estilos', icono: 'estilos', grupo: 'Interno', modulo: estilos, oculta: true },
 ];
 
-export const rutaInicial = 'panel';
 
 export function buscarPantalla(ruta) {
   return pantallas.find((p) => p.ruta === ruta);

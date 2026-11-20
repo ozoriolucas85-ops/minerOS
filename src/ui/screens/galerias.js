@@ -19,6 +19,9 @@ import { icono } from '../components/iconos.js';
 import { confirmar } from '../components/confirmar.js';
 import { avisar } from '../components/aviso.js';
 import { numero, nombreRoca, nombreNivel, fechaHora, leerNumero, esc } from '../formato.js';
+import { permite } from '../../servicios/permisos.js';
+import { actualizarLimitesGaleria } from '../../servicios/configuracion.js';
+import { usuarioActualId } from '../../sesion.js';
 
 // ── Lista ────────────────────────────────────────────────────────
 
@@ -116,12 +119,20 @@ function seccionBloqueo(galeria) {
 }
 
 function seccionFormularios(galeria, config) {
+  const yo = usuarioActualId();
+  const puedeAvance = permite(yo, 'galeria:avance', { galeriaId: galeria.id });
+  const puedeApuntalar = permite(yo, 'galeria:apuntalar', { galeriaId: galeria.id });
+  const puedeFisuras = permite(yo, 'galeria:fisuras', { galeriaId: galeria.id });
+  if (!puedeAvance && !puedeApuntalar && !puedeFisuras) {
+    const cuadrilla = estado.listar('cuadrillas').find((c) => c.galeriaIds?.includes(galeria.id));
+    return `<p class="solo-lectura">${icono('info')} Solo lectura: los avances, apuntalamientos y fisuras de esta galería los carga ${cuadrilla ? `el capataz de la ${esc(cuadrilla.nombre)}` : 'su capataz'} o un ingeniero.</p>`;
+  }
   const puntos = numero(config.penalizacionFisuras);
   const bloqueada = galeria.bloqueada;
   const deshabilitado = bloqueada ? 'disabled' : '';
   return `
     <div class="grilla grilla--formularios">
-      <form class="tarjeta pila" id="form-avance" novalidate>
+      ${puedeAvance ? `<form class="tarjeta pila" id="form-avance" novalidate>
         <h3 class="tarjeta__titulo">${icono('galerias')} Registrar avance</h3>
         ${bloqueada ? `<p class="aviso-bloqueo">${icono('candado')} Galería bloqueada: no se pueden cargar avances.</p>` : ''}
         <label class="campo"><span class="campo__etiqueta">Metros excavados</span>
@@ -130,20 +141,20 @@ function seccionFormularios(galeria, config) {
           <span class="campo__error" id="error-metros"></span></label>
         <label class="casilla"><input type="checkbox" name="fisuras" ${deshabilitado}> Se vieron fisuras</label>
         <button class="boton boton--primario" type="submit" ${deshabilitado}>Registrar avance</button>
-      </form>
+      </form>` : ''}
 
-      <div class="tarjeta pila">
+      ${puedeApuntalar ? `<div class="tarjeta pila">
         <h3 class="tarjeta__titulo">${icono('estado-verde')} Apuntalamiento</h3>
         <p class="texto-secundario">Hay <strong class="mono">${numero(galeria.metrosSinApuntalar, 2)} m</strong> sin apuntalar.
         Apuntalar deja los metros sin apuntalar en 0 y borra las fisuras: es lo único que sube la estabilidad.</p>
         <button class="boton boton--secundario" id="boton-apuntalar">Registrar apuntalamiento</button>
-      </div>
+      </div>` : ''}
 
-      <div class="tarjeta pila">
+      ${puedeFisuras ? `<div class="tarjeta pila">
         <h3 class="tarjeta__titulo">${icono('estado-amarillo')} Fisuras</h3>
         <p class="texto-secundario">${galeria.hayFisuras ? `Ya hay fisuras reportadas (restan ${puntos} puntos de estabilidad).` : `Reportar fisuras resta ${puntos} puntos de estabilidad hasta el próximo apuntalamiento.`}</p>
         <button class="boton boton--secundario" id="boton-fisuras" ${galeria.hayFisuras ? 'disabled' : ''}>Reportar fisuras</button>
-      </div>
+      </div>` : ''}
     </div>`;
 }
 
@@ -221,10 +232,28 @@ function dibujarDetalle(contenedor, galeria) {
       </section>
       ${galeria.bloqueada ? seccionBloqueo(galeria) : ''}
       ${seccionFormularios(galeria, config)}
+      ${seccionLimites(galeria)}
       ${seccionPersonas(galeria, ubicaciones, nivel)}
       ${seccionHistorial(galeria)}
     </div>`;
   conectarDetalle(contenedor, galeria);
+}
+
+function seccionLimites(galeria) {
+  if (!permite(usuarioActualId(), 'galeria:limites', { galeriaId: galeria.id })) return '';
+  return `
+    <form class="tarjeta pila" id="form-limites" novalidate>
+      <h3 class="tarjeta__titulo">${icono('configuracion')} Límites de seguridad de esta galería</h3>
+      <p class="texto-secundario">Valores por defecto según la roca; el estado se recalcula al guardar. Solo el ingeniero puede cambiarlos.</p>
+      <div class="grilla grilla--compacta-2">
+        <label class="campo"><span class="campo__etiqueta">Metros máx. sin apuntalar</span>
+          <input class="entrada entrada--mono" name="metrosMax" inputmode="decimal" value="${String(galeria.metrosMax).replace('.', ',')}"></label>
+        <label class="campo"><span class="campo__etiqueta">Velocidad máx. (m por turno)</span>
+          <input class="entrada entrada--mono" name="velocidadMax" inputmode="decimal" value="${String(galeria.velocidadMax).replace('.', ',')}"></label>
+      </div>
+      <span class="campo__error" id="error-limites" role="alert"></span>
+      <button class="boton boton--secundario" type="submit">Guardar límites</button>
+    </form>`;
 }
 
 function mostrarError(error) {
@@ -232,8 +261,18 @@ function mostrarError(error) {
 }
 
 function conectarDetalle(contenedor, galeria) {
+  contenedor.querySelector('#form-limites')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target.elements;
+    try {
+      const ev = await actualizarLimitesGaleria(galeria.id, { metrosMax: leerNumero(f.metrosMax.value), velocidadMax: leerNumero(f.velocidadMax.value) });
+      avisar(`Límites guardados. Estado: ${ev.mensaje} (${numero(ev.estabilidad, 1)} %).`);
+    } catch (err) {
+      contenedor.querySelector('#error-limites').textContent = err.message;
+    }
+  });
   const formAvance = contenedor.querySelector('#form-avance');
-  formAvance.addEventListener('submit', async (e) => {
+  formAvance?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const entrada = formAvance.elements.metros;
     const error = contenedor.querySelector('#error-metros');
@@ -253,7 +292,7 @@ function conectarDetalle(contenedor, galeria) {
     }
   });
 
-  contenedor.querySelector('#boton-apuntalar').addEventListener('click', async () => {
+  contenedor.querySelector('#boton-apuntalar')?.addEventListener('click', async () => {
     const ok = await confirmar({
       titulo: `¿Registrar apuntalamiento en ${galeria.nombre}?`,
       mensaje: `Se registran ${numero(galeria.metrosSinApuntalar, 2)} m apuntalados. Los metros sin apuntalar vuelven a 0 y se borran las fisuras.`,
@@ -268,7 +307,7 @@ function conectarDetalle(contenedor, galeria) {
     }
   });
 
-  contenedor.querySelector('#boton-fisuras').addEventListener('click', async () => {
+  contenedor.querySelector('#boton-fisuras')?.addEventListener('click', async () => {
     try {
       const r = await registrarFisuras(galeria.id);
       avisar(`Fisuras reportadas.${r.cambioEstado ? ` Nuevo estado: ${ESTADOS[r.estadoNuevo].mensaje}.` : ''}`);

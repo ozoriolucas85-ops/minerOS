@@ -15,6 +15,7 @@ import {
 import { ErrorDeValidacion, redondear } from '../domain/utilidades.js';
 import { verificarPin } from './autenticacion.js';
 import { turnoActual } from './turnos.js';
+import { exigir } from './permisos.js';
 import { ahora as relojAhora } from '../reloj.js';
 
 function exigirGaleria(galeriaId) {
@@ -64,6 +65,7 @@ async function guardarResultado(resultado, registro, ahora, extra) {
  */
 export async function registrarAvance(galeriaId, { metros, fisuras = false, usuarioId = usuarioActualId(), ahora = relojAhora(), simulado = false }) {
   const galeria = exigirGaleria(galeriaId);
+  exigir(usuarioId, 'galeria:avance', { galeriaId });
   const resultado = aplicarAvance(galeria, { metros, fisuras }, estado.config(), ahora);
   const avance = {
     id: generarId('av'),
@@ -82,6 +84,7 @@ export async function registrarAvance(galeriaId, { metros, fisuras = false, usua
 /** Registra un apuntalamiento: metros sin apuntalar a 0 y sin fisuras. */
 export async function registrarApuntalamiento(galeriaId, { usuarioId = usuarioActualId(), ahora = relojAhora(), simulado = false } = {}) {
   const galeria = exigirGaleria(galeriaId);
+  exigir(usuarioId, 'galeria:apuntalar', { galeriaId });
   const resultado = aplicarApuntalamiento(galeria, estado.config(), ahora);
   const avance = {
     id: generarId('av'),
@@ -106,6 +109,7 @@ export async function registrarApuntalamiento(galeriaId, { usuarioId = usuarioAc
 /** Reporta fisuras en una galería. */
 export async function registrarFisuras(galeriaId, { usuarioId = usuarioActualId(), ahora = relojAhora(), simulado = false } = {}) {
   const galeria = exigirGaleria(galeriaId);
+  exigir(usuarioId, 'galeria:fisuras', { galeriaId });
   const resultado = reportarFisuras(galeria, estado.config(), ahora);
   await guardarResultado(resultado, null, ahora, { simulado });
   await estado.guardar(
@@ -120,8 +124,12 @@ export async function registrarFisuras(galeriaId, { usuarioId = usuarioActualId(
  * con un apuntalamiento registrado después del bloqueo.
  * @returns {Promise<{ valido: boolean, errores: string[] }>}
  */
-export async function desbloquearGaleria(galeriaId, { ingenieroId, pinIngeniero, capatazId, pinCapataz, ahora = relojAhora(), simulado = false }) {
+export async function desbloquearGaleria(galeriaId, { ingenieroId, pinIngeniero, capatazId, pinCapataz, ahora = relojAhora(), simulado = false, usuarioId = usuarioActualId() }) {
   const galeria = exigirGaleria(galeriaId);
+  const operador = usuarioId ? estado.obtener('usuarios', usuarioId) : null;
+  if (!operador || !['ingeniero', 'capataz'].includes(operador.rol)) {
+    throw new ErrorDeValidacion('Solo un ingeniero o un capataz pueden iniciar el desbloqueo.');
+  }
   const ingeniero = await verificarPin(ingenieroId, pinIngeniero);
   const capataz = await verificarPin(capatazId, pinCapataz);
   const validacion = validarDesbloqueo({ galeria, avances: estado.listar('avances'), ingeniero, capataz });

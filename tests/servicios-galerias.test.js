@@ -11,8 +11,10 @@ import {
 import { verificarPin } from '../src/servicios/autenticacion.js';
 import { turnoActual } from '../src/servicios/turnos.js';
 import { crearAlmacenFalso } from './ayudas.js';
+import { cambiarUsuario } from '../src/sesion.js';
 
 beforeEach(async () => {
+  cambiarUsuario('U-ING');
   await estado.iniciar(crearAlmacenLocal({ almacen: crearAlmacenFalso(), ventana: null }));
 });
 

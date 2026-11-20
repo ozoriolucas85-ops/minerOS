@@ -9,6 +9,8 @@ import { icono } from '../components/iconos.js';
 import { avisar } from '../components/aviso.js';
 import { navegar } from '../../router.js';
 import { esc, numero, leerNumero } from '../formato.js';
+import { permite } from '../../servicios/permisos.js';
+import { usuarioActualId } from '../../sesion.js';
 
 function selectorCarga(codigoActual) {
   const cargas = estado.listar('cargas').sort((a, b) => b.creada - a.creada);
@@ -90,7 +92,7 @@ function renderCarga(contenedor, codigo) {
         </form>
         <div id="resultado-pureza"></div>
         <div class="fila">
-          <button class="boton boton--primario boton--grande" id="guardar-pureza">Guardar en la carga</button>
+          ${permite(usuarioActualId(), 'pureza:guardar', { cuadrillaId: carga.cuadrillaId }) ? '<button class="boton boton--primario boton--grande" id="guardar-pureza">Guardar en la carga</button>' : '<span class="texto-tenue">Solo lectura: la pureza la guarda la cuadrilla de la carga o un ingeniero.</span>'}
           ${carga.pureza != null ? `<span class="texto-secundario">Guardado: ${numero(carga.pureza, 1)} % (${carga.modoPureza})</span>` : ''}
         </div>
       </section>
@@ -124,7 +126,7 @@ function renderCarga(contenedor, codigo) {
   );
   form.addEventListener('input', calcular);
   form.addEventListener('submit', (e) => e.preventDefault());
-  contenedor.querySelector('#guardar-pureza').addEventListener('click', async () => {
+  contenedor.querySelector('#guardar-pureza')?.addEventListener('click', async () => {
     try {
       const guardada = await guardarPureza(carga.id, datos());
       avisar(`Pureza guardada en ${guardada.codigo}: ${numero(guardada.pureza, 1)} % (${guardada.purezaDetalle.clasificacion}).`);

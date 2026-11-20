@@ -7,6 +7,7 @@ import { validarEscaneo, estadoDePersona, escaneosDe } from '../domain/ubicacion
 import { ErrorDeValidacion } from '../domain/utilidades.js';
 import { nodosPorId, galeriasPorId } from './ubicacion.js';
 import { ahora as relojAhora } from '../reloj.js';
+import { exigir } from './permisos.js';
 
 /**
  * Registra que una persona escaneó una baliza.
@@ -14,9 +15,11 @@ import { ahora as relojAhora } from '../reloj.js';
  * un evento "escaneo-rechazado".
  * @returns {Promise<{ escaneo: object, nodo: object, adentro: boolean }>}
  */
-export async function registrarEscaneo({ nodoId, usuarioId = usuarioActualId(), ahora = relojAhora(), simulado = false }) {
+export async function registrarEscaneo({ nodoId, usuarioId = usuarioActualId(), operadorId = usuarioActualId(), ahora = relojAhora(), simulado = false }) {
   const usuario = estado.obtener('usuarios', usuarioId);
   if (!usuario) throw new ErrorDeValidacion('Elegí quién está escaneando.');
+  // Quien registra (operador) puede ser la misma persona o alguien con permiso sobre ella.
+  exigir(operadorId, 'escaneo:registrar', { objetivoId: usuarioId });
   const nodos = nodosPorId();
   // Galería donde está ahora la persona (si está adentro): puede escanear para salir de ella.
   const actual = estadoDePersona(escaneosDe(estado.listar('escaneos'), usuarioId), nodos);

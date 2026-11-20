@@ -3,6 +3,8 @@
 
 import { simulador } from '../../sim/simulador.js';
 import { icono } from './iconos.js';
+import { permite } from '../../servicios/permisos.js';
+import { usuarioActualId, suscribirseASesion } from '../../sesion.js';
 
 const reloj = (minuto) => `${String(Math.floor(minuto / 60)).padStart(2, '0')}:${String(Math.floor(minuto % 60)).padStart(2, '0')}`;
 
@@ -15,7 +17,7 @@ export function montarBarraSimulador() {
   let firma = '';
 
   function dibujar(info) {
-    const visible = info.fase === 'corriendo' || info.fase === 'pausado' || info.fase === 'terminado';
+    const visible = (info.fase === 'corriendo' || info.fase === 'pausado' || info.fase === 'terminado') && permite(usuarioActualId(), 'ver:simulador');
     const nueva = JSON.stringify([visible, info.fase, info.velocidad, Math.floor(info.minuto)]);
     if (nueva === firma) return;
     firma = nueva;
@@ -38,5 +40,6 @@ export function montarBarraSimulador() {
     if (v) simulador.cambiarVelocidad(Number(v));
   });
   dibujar(simulador.informe());
+  suscribirseASesion(() => dibujar(simulador.informe()));
   return simulador.suscribirse(dibujar);
 }

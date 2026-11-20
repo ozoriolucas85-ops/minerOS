@@ -12,8 +12,10 @@ import {
 import { registrarAvance } from '../src/servicios/galerias.js';
 import { siguienteCodigo } from '../src/domain/traslados.js';
 import { crearAlmacenFalso } from './ayudas.js';
+import { cambiarUsuario } from '../src/sesion.js';
 
 beforeEach(async () => {
+  cambiarUsuario('U-ING');
   await estado.iniciar(crearAlmacenLocal({ almacen: crearAlmacenFalso(), ventana: null }));
 });
 

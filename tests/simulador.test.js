@@ -8,6 +8,7 @@ import { crearAzar, crearSeed } from '../src/data/seed.js';
 import { ubicacionesActuales } from '../src/servicios/ubicacion.js';
 import { evaluarGaleria } from '../src/domain/semaforo.js';
 import { crearAlmacenFalso } from './ayudas.js';
+import { cambiarUsuario } from '../src/sesion.js';
 
 describe('plan del turno', () => {
   const seed = crearSeed({ ahora: 0 });
@@ -39,6 +40,7 @@ describe('simulador: un turno completo', () => {
 
   beforeAll(async () => {
     globalThis.localStorage = crearAlmacenFalso();
+    cambiarUsuario('U-ING');
     reiniciarReloj();
     await estado.iniciar(crearAlmacenLocal({ almacen: crearAlmacenFalso(), ventana: null }));
     registro.galeriasAntes = JSON.stringify(estado.listar('galerias').sort((a, b) => a.id.localeCompare(b.id)));

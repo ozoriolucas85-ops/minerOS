@@ -1,5 +1,6 @@
 // Mina de demostración "La Esperanza".
 import { purezaPorDensidad, purezaManual } from '../domain/pureza.js';
+import { hashPin } from '../domain/seguridad.js';
 
 // 3 niveles (−20, −40 y −60 m), 6 galerías, cruces, frentes, 2 refugios, boca
 // de mina y acopio. 3 cuadrillas con capataz y 4–5 trabajadores, 1 ingeniero.
@@ -119,7 +120,8 @@ export function crearSeed({ ahora = Date.now() } = {}) {
     tramo('A-REF2', 'G6-P', 'R2'),
   ];
 
-  // ── Usuarios y cuadrillas (PIN demo; se guardan con hash en la fase 10) ──
+  // ── Usuarios y cuadrillas. Los PIN de la demo (ver README) se guardan solo
+  //    como hash SHA-256 con sal: nunca en texto plano. ──
   const usuarios = [
     { id: 'U-ING', nombre: 'Laura Benítez', rol: 'ingeniero', pin: '1111' },
     { id: 'U-CAP1', nombre: 'Héctor Ramírez', rol: 'capataz', pin: '2222', cuadrillaId: 'CU-NORTE' },
@@ -138,6 +140,13 @@ export function crearSeed({ ahora = Date.now() } = {}) {
       usuarios.push({ id, nombre, rol: 'trabajador', pin: String(1000 + numero), cuadrillaId });
       numero++;
     }
+  }
+
+  // Reemplaza el PIN de demo por su hash con sal.
+  for (const u of usuarios) {
+    u.sal = `canario:${u.id}`;
+    u.pinHash = hashPin(u.pin, u.sal);
+    delete u.pin;
   }
 
   const cuadrillas = [

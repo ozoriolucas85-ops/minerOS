@@ -185,3 +185,41 @@ Todo `src/domain/` es puro: recibe datos y `config`, devuelve resultados, sin DO
 - "Borrar datos simulados" deja 0 simulados, las galerías como antes (G3 1,5 m, G5 0,8 m) y el reloj en hora real, sin tocar las 86 cargas reales.
 
 **Lista "Listo cuando":** ✔ una corrida completa muestra todas las funciones en unos 2 minutos · ✔ después se puede desbloquear G5 con las dos llaves en vivo.
+
+## Fase 10 — Ingreso y roles ✅ (2026-11-20)
+
+- **PIN con hash:** `domain/seguridad.js` implementa SHA-256 en JS puro (verificado con vectores conocidos) y `hashPin(pin, sal)` con una sal por usuario. El seed guarda solo `pinHash` y `sal`, y `migrarPins()` convierte al arrancar cualquier PIN en texto plano guardado por versiones anteriores. `verificarPin` compara hashes.
+- **Permisos (`domain/permisos.js`, puro y testeado):**
+  - Pantallas por rol (la primera es la de inicio):
+    - ingeniero → todo, empezando por el panel;
+    - capataz → galerías, mapa, chapas, cargas, pureza y balizas;
+    - trabajador → solo balizas (escanear).
+  - Acciones: el capataz carga avances, apuntalamientos, fisuras, cargas, pesajes y pureza **solo de su cuadrilla**. La primera llave es del ingeniero y la segunda del capataz. Un trabajador solo registra sus propios escaneos.
+  - Solo el ingeniero cambia la configuración y los límites de seguridad, imprime QR y usa el simulador.
+- **Los permisos se validan en la lógica**, no solo en la UI: `servicios/permisos.js` (`exigir`/`permite`) se usa en avances, apuntalamientos, fisuras, desbloqueo, cargas, pesajes, pureza, escaneos (con `operadorId` = quien registra), configuración y simulador.
+- **Sesión:** `sesion.js` en sessionStorage (sobrevive a una recarga y se cierra con la pestaña). `servicios/autenticacion.js`: `ingresar`, `cerrarSesion`, `usuarioActual`.
+- **Pantalla de ingreso:** foto del túnel de /inspo/uso-para.fondo de fondo; elección de rol (tarjetas grandes), usuario de ese rol y PIN; errores claros; desplegable "Usuarios de la demo" con los PIN para presentar.
+- **Guardia de rutas y menú por rol:** sin sesión todo lleva al ingreso. Una pantalla no permitida (aunque se escriba la URL) muestra "Tu rol no tiene acceso a …" y vuelve al inicio del rol. Menú lateral, barra inferior y "Más" muestran solo lo permitido, con la caja del usuario y "Cerrar sesión". La barra del simulador solo la ve el ingeniero; los banners de alerta los ven todos.
+- **Pantallas según permisos:**
+  - Galerías: formularios solo si la galería es de tu cuadrilla (si no, aviso de solo lectura) y formulario de **límites de seguridad** solo para el ingeniero.
+  - Cargas: cuadrillas y galerías propias; pesaje solo en cargas de tu cuadrilla.
+  - Pureza: "Guardar" solo si corresponde.
+  - Balizas: el trabajador escanea como sí mismo, no ve la pestaña de QR y tiene **"Mi recorrido"** (mini mapa con su hilo, su ruta de salida resaltada y los pasos en texto). El capataz puede registrar a su cuadrilla.
+- **Configuración (ingeniero):** formularios de tolerancia de pérdida, minutos sin señal, umbrales verde/rojo, límites por defecto por roca y densidades (validados con `servicios/configuracion.js`), más usuarios y cuadrillas, estructura de la mina y restablecer demo.
+- Tests nuevos: `permisos.test.js` (SHA-256, PIN y permisos por rol) y `servicios-permisos.test.js` (ingreso, migración de PINs, capataz sin acceso a límites ni a la config, restricción por cuadrilla, trabajador solo escanea por sí mismo, validación de la config).
+
+**Verificación:** `npm test` ✔ (224 tests) · `npm run build` ✔ · navegador con clics reales:
+- Sin sesión, `#/panel` lleva a `#/ingreso`; los 17 usuarios quedaron con hash (0 PIN en texto plano tras la migración).
+- Capataz Marta Quiroga: PIN 9999 → "El PIN no es correcto"; con 3333 entra a Galerías, con menú de 6 pantallas. `#/configuracion` → aviso y vuelta. G1 (de otra cuadrilla) en solo lectura; G3 (propia) con formularios y **sin** límites. "Cerrar sesión" (clic) → ingreso.
+- Trabajador Luis Acosta (1005): entra directo a Balizas, menú con una sola pantalla, "Escaneás como Luis Acosta", "Mi recorrido" con la ruta de salida; `#/mapa` → "Tu rol no tiene acceso a Mapa". Después de recargar, la sesión sigue.
+- Ingeniera: inicio en Panel, 10 pantallas, límites visibles en G3; tolerancia 4,5 guardada desde Configuración.
+- Ingreso revisado a 390 px.
+
+**Lista "Listo cuando":** ✔ un capataz no puede cambiar límites de seguridad (no lo ve y el servicio lo rechaza) · ✔ un trabajador solo ve escaneo, su recorrido y la ruta de salida.
+
+---
+
+### Pendiente / fuera del alcance de las fases 0–10
+- Fases 11 (PWA sin conexión), 12 (Firebase) y 13 (pulido y publicación) del PLAN no se hicieron: el pedido llegaba hasta la fase 10.
+- Alta y edición de usuarios, cuadrillas y estructura de la mina desde Configuración: por ahora en solo lectura.
+- La lectura de QR con la cámara de un celular real no se pudo probar acá (se probó la decodificación con `scanFile`). Para probarla: `npm run dev:https` y abrir la IP que muestra en el celular.

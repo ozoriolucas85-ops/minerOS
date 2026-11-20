@@ -14,6 +14,8 @@ import { crearCarga, registrarPesaje, puntosDeCarga } from '../servicios/cargas.
 import { iniciarTurno } from '../servicios/turnos.js';
 import { rutaDeSalidaDesde, nodosPorId } from '../servicios/ubicacion.js';
 import { planificarTurno, GUION, MINUTOS_TURNO } from './plan.js';
+import { exigir } from '../servicios/permisos.js';
+import { usuarioActualId } from '../sesion.js';
 
 const MINUTO = 60 * 1000;
 const CLAVE_RESPALDO = 'canario:sim-respaldo';
@@ -100,7 +102,7 @@ export function crearSimulador({ intervalo = 200 } = {}) {
   async function escanear({ usuarioId, nodoId, viaje }) {
     if (viajes.get(usuarioId) !== viaje) return; // movimiento cancelado (p. ej. por evacuación)
     try {
-      const r = await registrarEscaneo({ usuarioId, nodoId, ahora: ahora(), simulado: true });
+      const r = await registrarEscaneo({ usuarioId, operadorId: usuarioId, nodoId, ahora: ahora(), simulado: true });
       if (!r.adentro && nodoId === 'BOCA') anotar(`${nombre(usuarioId)} salió por la boca: su chapa volvió al tablero.`);
     } catch (error) {
       anotar(`${nombre(usuarioId)}: ${error.message}`, 'alerta');
@@ -113,7 +115,7 @@ export function crearSimulador({ intervalo = 200 } = {}) {
     const enViaje = cola.some((e) => e.tipo === 'escanear' && e.usuarioId === usuarioId && e.viaje === viajes.get(usuarioId));
     if (!nodoId || enViaje) return;
     try {
-      await registrarEscaneo({ usuarioId, nodoId, ahora: ahora(), simulado: true });
+      await registrarEscaneo({ usuarioId, operadorId: usuarioId, nodoId, ahora: ahora(), simulado: true });
     } catch {
       /* galería cerrada: la baliza rechaza el escaneo */
     }
@@ -143,7 +145,9 @@ export function crearSimulador({ intervalo = 200 } = {}) {
 
   async function pesar({ cargaId, codigo, nodoId, peso }) {
     try {
-      const { tramo } = await registrarPesaje(cargaId, { nodoId, peso, ahora: ahora(), simulado: true });
+      const carga = estado.obtener('cargas', cargaId);
+      const capataz = estado.obtener('cuadrillas', carga?.cuadrillaId)?.capatazId;
+      const { tramo } = await registrarPesaje(cargaId, { nodoId, peso, ahora: ahora(), simulado: true, usuarioId: capataz });
       if (tramo?.sospechoso) anotar(`Traslado sospechoso ${codigo}: perdió ${tramo.porcentaje.toFixed(1).replace('.', ',')} % en un tramo.`, 'alerta');
     } catch (error) {
       anotar(`${codigo}: ${error.message}`, 'alerta');
@@ -304,6 +308,7 @@ export function crearSimulador({ intervalo = 200 } = {}) {
         return avisar();
       }
       if (fase === 'corriendo') return undefined;
+      exigir(usuarioActualId(), 'simulador:usar');
       if (!globalThis.localStorage?.getItem(CLAVE_RESPALDO)) {
         globalThis.localStorage?.setItem(CLAVE_RESPALDO, JSON.stringify(estado.listar('galerias')));
       }

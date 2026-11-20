@@ -16,6 +16,7 @@ import {
 import { purezaPorDensidad, purezaManual, clasificarPureza, mineralUtil } from '../domain/pureza.js';
 import { crearGrafo } from '../domain/rutas.js';
 import { turnoActual } from './turnos.js';
+import { exigir } from './permisos.js';
 import { ahora as relojAhora } from '../reloj.js';
 
 function exigirCarga(cargaId) {
@@ -36,6 +37,7 @@ export function buscarCargaPorCodigo(codigo) {
  */
 export async function crearCarga({ cuadrillaId, galeriaId, mineral, volumen, usuarioId = usuarioActualId(), ahora = relojAhora(), simulado = false }) {
   validarNuevaCarga({ cuadrillaId, galeriaId, mineral, volumen });
+  exigir(usuarioId, 'carga:crear', { cuadrillaId });
   const galeria = estado.obtener('galerias', galeriaId);
   if (!galeria) throw new ErrorDeValidacion('La galería no existe.');
   const motivo = motivoBloqueo(galeria);
@@ -75,6 +77,7 @@ export function puntosDeCarga(carga) {
  */
 export async function registrarPesaje(cargaId, { nodoId, peso, ahora = relojAhora(), usuarioId = usuarioActualId(), simulado = false }) {
   const carga = exigirCarga(cargaId);
+  exigir(usuarioId, 'carga:pesar', { cuadrillaId: carga.cuadrillaId });
   const nodosPorId = indexarPorId(estado.listar('nodos'));
   validarPesaje(carga, { nodoId, peso }, nodosPorId);
   const pesajes = [...carga.pesajes, { nodoId, peso, timestamp: ahora, usuarioId }];
@@ -106,8 +109,9 @@ export async function registrarPesaje(cargaId, { nodoId, peso, ahora = relojAhor
  * @param {{ modo: 'densidad'|'manual', peso?: number, muestra?: number, util?: number }} datos
  *   modo densidad: usa el peso indicado (o el primer pesaje) y el volumen de la carga.
  */
-export async function guardarPureza(cargaId, { modo, peso, muestra, util }) {
+export async function guardarPureza(cargaId, { modo, peso, muestra, util }, { usuarioId = usuarioActualId() } = {}) {
   const carga = exigirCarga(cargaId);
+  exigir(usuarioId, 'pureza:guardar', { cuadrillaId: carga.cuadrillaId });
   const resultado = calcularPurezaDeCarga(carga, { modo, peso, muestra, util });
   return estado.guardar('cargas', {
     ...carga,

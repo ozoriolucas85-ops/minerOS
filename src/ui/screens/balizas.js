@@ -5,7 +5,10 @@
 import { estado } from '../../state.js';
 import { codigoDeBaliza, leerCodigoQr } from '../../domain/ubicacion.js';
 import { registrarEscaneo } from '../../servicios/escaneos.js';
-import { rutaDeSalidaDesde, describirCamino } from '../../servicios/ubicacion.js';
+import { rutaDeSalidaDesde, describirCamino, hiloDe, ubicacionesActuales } from '../../servicios/ubicacion.js';
+import { permite } from '../../servicios/permisos.js';
+import { dibujarMapa, dibujarCamino, dibujarPersonas } from '../mapa/dibujo.js';
+import { datosDelMapa } from './mapa.js';
 import { usuarioActualId } from '../../sesion.js';
 import { icono } from '../components/iconos.js';
 import { avisar } from '../components/aviso.js';
@@ -15,11 +18,40 @@ import { ahora } from '../../reloj.js';
 const NOMBRE_TIPO = { boca: 'Boca de mina', acopio: 'Acopio', cruce: 'Cruce / punto', frente: 'Frente', refugio: 'Refugio' };
 
 function pestanas(activa) {
+  if (!permite(usuarioActualId(), 'qr:imprimir')) return '';
   return `
     <nav class="pestanas" aria-label="Secciones de balizas">
       <a class="pestana" href="#/balizas" ${activa === 'escanear' ? 'aria-current="page"' : ''}>${icono('balizas')} Escanear</a>
       <a class="pestana" href="#/balizas/imprimir" ${activa === 'imprimir' ? 'aria-current="page"' : ''}>${icono('balizas')} Generar e imprimir QR</a>
     </nav>`;
+}
+
+/** Personas por las que el usuario puede registrar un escaneo. */
+function personasPermitidas() {
+  const yo = usuarioActualId();
+  return estado.listar('usuarios').filter((u) => permite(yo, 'escaneo:registrar', { objetivoId: u.id }));
+}
+
+/** Recorrido propio del trabajador: hilo de Ariadna y ruta de salida, con mini mapa. */
+function miRecorrido() {
+  const yo = usuarioActualId();
+  const ubicacion = ubicacionesActuales().find((p) => p.usuario.id === yo);
+  const hilo = hiloDe(yo);
+  const ruta = ubicacion?.adentro ? rutaDeSalidaDesde(ubicacion.nodoId) : null;
+  const nodos = estado.listar('nodos');
+  const { contenido, ancho, alto } = dibujarMapa(datosDelMapa(), { prefijo: 'mio', interactivo: false });
+  const capas =
+    (hilo.camino.length > 1 ? dibujarCamino(hilo.camino, nodos, 'hilo') : '') +
+    (ruta && ruta.camino.length > 1 ? dibujarCamino(ruta.camino, nodos, 'salida') : '') +
+    (ubicacion?.adentro ? dibujarPersonas([ubicacion], { nodos, seleccionadoId: yo }) : '');
+  return `
+    <section class="tarjeta pila mi-recorrido">
+      <h3 class="tarjeta__titulo">${icono('salida')} Mi recorrido</h3>
+      <p class="texto-secundario">${ubicacion?.adentro ? `Estás en <strong>${esc(nodos.find((n) => n.id === ubicacion.nodoId)?.nombre ?? '')}</strong>.` : 'Estás afuera de la mina.'}</p>
+      <div class="mi-recorrido__mapa"><svg viewBox="0 0 ${ancho} ${alto}" class="mapa" style="aspect-ratio:${ancho}/${alto}" role="img" aria-label="Mi recorrido y mi ruta de salida">${contenido}<g>${capas}</g></svg></div>
+      ${ruta && ruta.camino.length > 1 ? `<p class="persona-detalle__camino camino-texto--salida"><strong>Ruta de salida:</strong> ${esc(describirCamino(ruta.camino))}</p>` : ''}
+      ${hilo.camino.length > 1 ? `<p class="persona-detalle__camino camino-texto--hilo"><strong>Mi hilo (volver por donde entré):</strong> ${esc(describirCamino(hilo.vuelta))}</p>` : ''}
+    </section>`;
 }
 
 function nombreNodo(n) {
@@ -44,8 +76,7 @@ function opcionesNodos() {
 
 function opcionesPersonas() {
   const actual = usuarioActualId();
-  return estado
-    .listar('usuarios')
+  return personasPermitidas()
     .sort((a, b) => a.nombre.localeCompare(b.nombre))
     .map((u) => `<option value="${u.id}" ${u.id === actual ? 'selected' : ''}>${esc(u.nombre)} (${u.rol})</option>`)
     .join('');
@@ -70,8 +101,12 @@ function renderEscanear(contenedor) {
       <div class="grilla grilla--escaneo">
         <section class="tarjeta pila">
           <h3 class="tarjeta__titulo">${icono('balizas')} Escanear con la cámara</h3>
-          <label class="campo"><span class="campo__etiqueta">Escanea</span>
-            <select class="entrada" id="persona">${opcionesPersonas()}</select></label>
+          ${
+            personasPermitidas().length > 1
+              ? `<label class="campo"><span class="campo__etiqueta">Escanea</span>
+            <select class="entrada" id="persona">${opcionesPersonas()}</select></label>`
+              : `<p class="texto-secundario">Escaneás como <strong>${esc(estado.obtener('usuarios', usuarioActualId())?.nombre ?? '')}</strong>.</p>`
+          }
           <div class="camara" id="camara" aria-live="polite">
             <p class="texto-tenue">Apuntá la cámara al código QR de la baliza.</p>
           </div>
@@ -89,10 +124,13 @@ function renderEscanear(contenedor) {
           <div id="resultado"></div>
         </section>
       </div>
+      ${estado.obtener('usuarios', usuarioActualId())?.rol === 'trabajador' ? `<div id="mi-recorrido">${miRecorrido()}</div>` : ''}
     </div>`;
 
   const resultado = contenedor.querySelector('#resultado');
-  const persona = () => contenedor.querySelector('#persona').value;
+  const zonaRecorrido = contenedor.querySelector('#mi-recorrido');
+  const salirRecorrido = zonaRecorrido ? estado.suscribirse(() => (zonaRecorrido.innerHTML = miRecorrido()), ['escaneos', 'galerias']) : null;
+  const persona = () => contenedor.querySelector('#persona')?.value ?? usuarioActualId();
 
   async function procesar(nodoId) {
     try {
@@ -116,6 +154,7 @@ function renderEscanear(contenedor) {
   const botonCamara = contenedor.querySelector('#boton-camara');
   const botonDetener = contenedor.querySelector('#boton-detener');
   async function detener() {
+    salirRecorrido?.();
     if (lector) {
       try {
         await lector.stop();
@@ -207,7 +246,7 @@ async function renderImprimir(contenedor) {
 
 export default {
   render(contenedor, { params = [] } = {}) {
-    if (params[0] === 'imprimir') {
+    if (params[0] === 'imprimir' && permite(usuarioActualId(), 'qr:imprimir')) {
       renderImprimir(contenedor);
       return null;
     }

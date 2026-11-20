@@ -13,6 +13,8 @@ import { avisar } from '../components/aviso.js';
 import { leerQr } from '../components/lectorQr.js';
 import { navegar } from '../../router.js';
 import { esc, numero, hora, fechaHora, leerNumero, nombreNivel } from '../formato.js';
+import { permite } from '../../servicios/permisos.js';
+import { usuarioActualId } from '../../sesion.js';
 
 const TIPOS_PESAJE = ['frente', 'cruce', 'boca', 'acopio'];
 
@@ -32,8 +34,13 @@ function chipPureza(carga) {
 // ── Lista ────────────────────────────────────────────────────────
 
 function formularioNuevaCarga() {
-  const galerias = estado.listar('galerias').sort((a, b) => a.id.localeCompare(b.id));
-  const cuadrillas = estado.listar('cuadrillas');
+  const cuadrillas = estado.listar('cuadrillas').filter((c) => permite(usuarioActualId(), 'carga:crear', { cuadrillaId: c.id }));
+  if (!cuadrillas.length) return `<p class="solo-lectura">${icono('info')} Tu rol no crea cargas.</p>`;
+  const propias = new Set(cuadrillas.flatMap((c) => c.galeriaIds ?? []));
+  const galerias = estado
+    .listar('galerias')
+    .filter((g) => usuarioActualId() && (estado.obtener('usuarios', usuarioActualId())?.rol === 'ingeniero' || propias.has(g.id)))
+    .sort((a, b) => a.id.localeCompare(b.id));
   return `
     <form class="tarjeta pila" id="form-carga" novalidate>
       <h3 class="tarjeta__titulo">${icono('cargas')} Nueva carga</h3>
@@ -134,7 +141,7 @@ function renderLista(contenedor) {
 
   // Nueva carga
   const form = contenedor.querySelector('#form-carga');
-  form.addEventListener('submit', async (e) => {
+  form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = form.elements;
     const errores = [];
@@ -286,7 +293,9 @@ async function dibujarDetalle(contenedor, codigo) {
       </section>
 
       ${
-        terminada
+        !permite(usuarioActualId(), 'carga:pesar', { cuadrillaId: carga.cuadrillaId })
+          ? `<p class="solo-lectura">${icono('info')} Solo lectura: esta carga la pesa la ${esc(ctx.cuadrillas.get(carga.cuadrillaId)?.nombre ?? 'cuadrilla')} o un ingeniero.</p>`
+          : terminada
           ? `<p class="texto-secundario">${icono('estado-verde', { clase: 'icono-ok' })} La carga llegó al acopio: no admite más pesajes.</p>`
           : `<form class="tarjeta pila" id="form-pesaje" novalidate>
               <h3 class="tarjeta__titulo">${icono('balizas')} Registrar pesaje</h3>
