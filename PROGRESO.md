@@ -60,3 +60,21 @@ Todo `src/domain/` es puro: recibe datos y `config`, devuelve resultados, sin DO
 - Config: se agregó `pureza.contrasteMinimo`. `state.config()` ahora completa una config guardada con los campos por defecto nuevos (`completarConfig`), así no se rompen los datos guardados antes.
 
 **Verificación:** `npm test` ✔ (159 tests, incluidos los 5 casos de verificación del plan y los bordes: peso 0, volumen 0, pureza negativa, sin camino de salida y umbrales exactos 15 y 40) · cobertura de `src/domain/` (`npm run coverage`): 100 % de líneas, sentencias y funciones, 96,6 % de ramas · `npm run build` ✔ · navegador: la app carga y el dominio corre con los datos reales (6 galerías en verde, 8 personas adentro, ruta G5-F → R2).
+
+## Fase 4 — Galerías, canario y bloqueo ✅ (2026-11-20)
+
+- **Capa nueva `src/servicios/`** (une dominio y estado; la UI no calcula nada de negocio):
+  - `galerias.js`: `registrarAvance`, `registrarApuntalamiento`, `registrarFisuras`, `desbloquearGaleria` (verifica los dos PIN, exige un apuntalamiento posterior al bloqueo y guarda en `desbloqueos` quién y cuándo) e `historialGaleria`. Cada cambio de estado, bloqueo, apuntalamiento, fisura y desbloqueo queda en `eventos`.
+  - `ubicacion.js` (personas adentro y ruta de salida para la UI), `autenticacion.js` (`verificarPin`, único punto que compara PIN; pasa a hash en la fase 10) y `turnos.js` (`turnoActual`).
+  - `src/sesion.js`: usuario actual (hasta la fase 10 es el ingeniero de la demo).
+- **Componentes:** `canario.js` (SVG con 3 estados animados en CSS: canta con notas flotando, agitado temblando y con plumas erizadas, caído boca arriba con ojos en X), `bateria.js` (barra segmentada con % en mono, `role="meter"`), `estado.js` (insignia color + ícono + texto), `alarma.js` (alarma con Web Audio sin archivos, se desbloquea con el primer clic), `alertas.js` (banners globales).
+- **Pantalla Galerías:** lista de fichas con resumen de estados; detalle `#/galerias/G3` con canario, batería, datos, formularios de avance (validado), apuntalamiento (con confirmación) y fisuras, personas en la galería con su ruta de salida, e historial.
+- **Amarillo:** banner "EVACUACIÓN" parpadeante en todas las pantallas, alarma sonora con botón "Silenciar" (vuelve a sonar si aparece una alerta nueva) y lista de quién está en la galería con su ruta de salida (BFS).
+- **Rojo:** banner "PELIGRO DE DERRUMBE", galería rayada con candado, formularios de avance deshabilitados y trabajadores adentro marcados como prioridad de rescate. Desbloqueo de dos llaves (ingeniero + PIN, capataz + PIN) con checklist de los 3 requisitos.
+- En celular los banners son compactos y la lista de personas arranca cerrada. Se recuerda si el usuario la abre o la cierra.
+- Lo que el usuario está escribiendo no se pierde cuando la pantalla se redibuja por cambios de datos.
+- Test nuevo: `servicios-galerias.test.js`.
+
+**Verificación:** `npm test` ✔ (167 tests) · `npm run build` ✔ · navegador con clics reales en G3: el formulario vacío muestra el error; 1 m → amarillo (banner, canario agitado, 37,5 %); 1,5 m → rojo y bloqueo automático (formularios deshabilitados, banner de rescate). Desbloqueo sin apuntalamiento → rechazado; apuntalamiento → ✓; PIN de capataz incorrecto → rechazado; PINs correctos → reabierta, con el historial completo. Banner y alarma visibles en otra pantalla (Panel); "Silenciar" apaga la alarma. Vista celular revisada a 390 px.
+
+**Lista "Listo cuando":** ✔ verde → amarillo → rojo solo con cargar avances · ✔ en rojo no se puede cargar nada · ✔ el desbloqueo exige apuntalamiento y dos llaves · ✔ el estado se entiende sin color (texto + ícono + forma del canario).
