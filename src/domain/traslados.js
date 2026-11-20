@@ -1,6 +1,7 @@
 // Pasaporte de la carga: pérdidas por tramo (sección 3.4 de CLAUDE.md).
 
 import { ErrorDeValidacion, exigirPositivo, esNumero } from './utilidades.js';
+import { bfs } from './rutas.js';
 
 /** Orden de los puntos de pesaje: frente → cruce → boca de mina → acopio. */
 export const ORDEN_PUNTOS = Object.freeze(['frente', 'cruce', 'boca', 'acopio']);
@@ -136,4 +137,26 @@ export function filtrarTraslados(cargas, filtros, config) {
     if (soloSospechosos && !calcularTramos(c.pesajes ?? [], config).some((t) => t.sospechoso)) return false;
     return true;
   });
+}
+
+/**
+ * Puntos de pesaje sugeridos para una carga, en orden: el frente de su
+ * galería, los cruces por el camino más corto hasta la boca, la boca y el acopio.
+ * @param {Map} grafo crearGrafo(nodos, aristas)
+ * @returns {string[]} ids de nodos
+ */
+export function recorridoDeCarga(grafo, nodosPorId, frenteId) {
+  const camino = bfs(grafo, frenteId, (id) => nodosPorId.get(id)?.tipo === 'boca');
+  if (!camino) return [];
+  const puntos = camino.camino.filter((id) => ORDEN_PUNTOS.includes(nodosPorId.get(id)?.tipo));
+  const acopio = [...nodosPorId.values()].find((n) => n.tipo === 'acopio');
+  return acopio ? [...puntos, acopio.id] : puntos;
+}
+
+/** Próximo punto sugerido según los pesajes ya hechos (o null si terminó). */
+export function proximoPunto(recorrido, pesajes) {
+  const hechos = new Set((pesajes ?? []).map((p) => p.nodoId));
+  const ultimo = (pesajes ?? []).at(-1)?.nodoId;
+  const desde = ultimo ? recorrido.indexOf(ultimo) + 1 : 0;
+  return recorrido.slice(desde).find((id) => !hechos.has(id)) ?? null;
 }

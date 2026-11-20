@@ -67,6 +67,8 @@ export function clasificarPureza(pureza, config) {
   return 'Baja';
 }
 
+const decimal = (n) => String(n).replace('.', ',');
+
 /**
  * Sugiere el modo según el contraste de densidad entre el mineral y el estéril.
  * Si la diferencia relativa es menor que config.pureza.contrasteMinimo (caliza y
@@ -80,11 +82,11 @@ export function sugerirModo(mineral, config) {
   if (contraste < config.pureza.contrasteMinimo) {
     return {
       modo: 'manual',
-      motivo: `La densidad de ${nombreMineral(mineral).toLowerCase()} (${densidadMineral} g/cm³) es casi igual a la de la roca estéril (${densidadEsteril} g/cm³), así que pesar la carretilla no permite distinguirlos. Conviene medir una muestra.`,
+      motivo: `La densidad de ${nombreMineral(mineral).toLowerCase()} (${decimal(densidadMineral)} g/cm³) es casi igual a la de la roca estéril (${decimal(densidadEsteril)} g/cm³), así que pesar la carretilla no permite distinguirlos. Conviene medir una muestra.`,
     };
   }
   return {
     modo: 'densidad',
-    motivo: `${nombreMineral(mineral)} (${densidadMineral} g/cm³) es bastante más denso que la roca estéril (${densidadEsteril} g/cm³): el peso de la carga permite estimar la pureza.`,
+    motivo: `${nombreMineral(mineral)} (${decimal(densidadMineral)} g/cm³) es bastante más denso que la roca estéril (${decimal(densidadEsteril)} g/cm³): el peso de la carga permite estimar la pureza.`,
   };
 }

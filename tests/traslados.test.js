@@ -158,3 +158,19 @@ describe('filtrarTraslados', () => {
     expect(filtrarTraslados(cargas, { hasta: 2000 }, config).map((c) => c.id)).toEqual(['a', 'b']);
   });
 });
+
+describe('recorrido sugerido de una carga', () => {
+  it('frente → cruces del camino → boca → acopio', async () => {
+    const { recorridoDeCarga, proximoPunto } = await import('../src/domain/traslados.js');
+    const { crearGrafo } = await import('../src/domain/rutas.js');
+    const seed2 = crearSeed({ ahora: 0 });
+    const grafo = crearGrafo(seed2.nodos, seed2.aristas);
+    const recorrido = recorridoDeCarga(grafo, nodosPorId, 'G3-F');
+    expect(recorrido).toEqual(['G3-F', 'G3-P', 'C2', 'C1', 'BOCA', 'ACOPIO']);
+    expect(proximoPunto(recorrido, [])).toBe('G3-F');
+    expect(proximoPunto(recorrido, [{ nodoId: 'G3-F' }, { nodoId: 'C2' }])).toBe('C1');
+    expect(proximoPunto(recorrido, recorrido.map((nodoId) => ({ nodoId })))).toBeNull();
+    expect(recorridoDeCarga(grafo, nodosPorId, 'NADA')).toEqual([]);
+    expect(recorridoDeCarga(grafo, new Map([...nodosPorId].filter(([, n]) => n.tipo !== 'acopio')), 'G1-F')).toEqual(['G1-F', 'G1-P', 'C1', 'BOCA']);
+  });
+});

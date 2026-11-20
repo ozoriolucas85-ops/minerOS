@@ -22,7 +22,7 @@ function chapa(p, { rescate = false, nodos, cuadrillas }) {
       <span class="chapa__cuadrilla">${esc(cuadrilla?.nombre ?? (p.usuario.rol === 'ingeniero' ? 'Ingeniería' : '—'))}</span>
       ${lugar ? `<span class="chapa__lugar">${icono('balizas')} ${esc(lugar)}</span>` : ''}
       <span class="chapa__tiempo mono">${p.ultimoEscaneo ? haceCuanto(p.minutosDesdeEscaneo) : 'sin escaneos'}</span>
-      ${p.sinSenal ? `<span class="chapa__etiqueta">${icono('estado-amarillo')} sin señal</span>` : ''}
+      ${p.sinSenal ? `<span class="chapa__etiqueta">${icono('sin-senal')} sin señal</span>` : ''}
       ${rescate ? `<span class="chapa__etiqueta chapa__etiqueta--rescate">${icono('estado-rojo')} prioridad de rescate</span>` : ''}
     </li>`;
 }
@@ -83,7 +83,7 @@ function dibujar(contenedor) {
           <div><p class="etiqueta">Personas adentro</p><span class="cifra contador-adentro__cifra">${adentro.length}</span></div>
         </div>
         <div class="tarjeta contador-adentro">
-          ${icono('estado-amarillo')}
+          ${icono('sin-senal')}
           <div><p class="etiqueta">Sin señal</p><span class="cifra">${sinSenal}</span>
           <p class="texto-tenue" style="margin:0">Más de ${numero(config.minutosSinSenal, 0)} min sin escanear</p></div>
         </div>

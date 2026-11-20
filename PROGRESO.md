@@ -117,3 +117,23 @@ Todo `src/domain/` es puro: recibe datos y `config`, devuelve resultados, sin DO
 - En el mapa, clic en Nicolás Vera (G5 en rojo) → hilo, vuelta y ruta de salida Frente Profunda → … → Refugio 2.
 - Con G6 bloqueada, la salida desde el cruce −60 cambia de "C3→G6-P→R2" a "C3→C2→C1→BOCA" (esquiva la galería en rojo); quien está dentro de G6 puede salir por ella.
 - Vistas a 390 px revisadas. La lectura con la cámara de un celular real queda para que la pruebes vos con `npm run dev:https`.
+
+## Fase 7 — Cargas y pureza ✅ (2026-11-20)
+
+- **Dominio:** `recorridoDeCarga` (frente → cruces del camino más corto → boca → acopio, por BFS) y `proximoPunto`. El texto de ayuda de pureza usa coma decimal.
+- **Servicio `servicios/cargas.js`:** `crearCarga` (código único correlativo CAN-0001…; no se puede crear en una galería bloqueada), `puntosDeCarga`, `registrarPesaje` (validado; si el tramo supera la tolerancia guarda un evento `sospechoso` con la carga, el tramo, la cuadrilla responsable y la hora, que el panel general muestra en la fase 8), `calcularPurezaDeCarga` y `guardarPureza` (guarda `pureza`, `modoPureza` y `purezaDetalle` en la carga), `buscarCargaPorCodigo`.
+- **Pantalla Cargas `#/cargas`:** formulario de nueva carga validado (las galerías cerradas aparecen deshabilitadas); "Pesar una carga" por código o escaneando su QR (diálogo de cámara reutilizable `ui/components/lectorQr.js`, con ingreso manual de respaldo); historial filtrable por fecha, cuadrilla y "solo sospechosos", con las sospechosas destacadas en rojo (en celular la tabla pasa a tarjetas).
+- **Detalle `#/cargas/CAN-0001`:** datos y QR de la carga; seguimiento tipo envío, con cada punto (peso y hora), cada tramo (−kg y %) y los puntos pendientes; el tramo sospechoso queda en rojo con "SOSPECHOSO: supera la tolerancia… · cuadrilla · hora"; formulario de pesaje que sugiere el próximo punto.
+- **Pantalla Pureza `#/pureza/CAN-0001`:** recomendación de modo con su explicación (manual para caliza y cuarzo, densidad para hierro y cobre) y elección entre los dos modos. Densidad: peso del frente editable ÷ volumen. Manual: muestra y útil. El resultado se ve en vivo: %, Alta/Media/Baja (colores de marca, no de semáforo), medidor con las marcas 50/80, mineral útil, densidad, y la nota "la pureza por densidad es una estimación". "Guardar en la carga".
+- Íconos nuevos `info` y `sin-senal` (para no usar los del semáforo fuera de los estados).
+- Tests nuevos: `servicios-cargas.test.js` y el recorrido de la carga.
+
+**Verificación:** `npm test` ✔ (197 tests) · `npm run build` ✔ · navegador con clics reales:
+- El formulario vacío muestra los 4 errores.
+- Se crea CAN-0001 (Cuadrilla Este, G3, hierro, 0,25 m³) y sugiere el Frente Este.
+- 900 kg en el frente → 850 kg en el cruce −40: ese tramo exacto queda "−50 kg · 5,6 %" y "SOSPECHOSO… Cuadrilla Este · hora", y se guarda el evento.
+- Pureza de CAN-0001: 3,6 g/cm³ → 38,5 % Baja, 346,2 kg útiles (igual que el caso de la fase 3), guardada en la carga.
+- Una carga de cuarzo sugiere y preselecciona el modo manual con la explicación; 500 g → 420 g da 84 % Alta.
+- El historial con "Solo sospechosos" deja solo CAN-0001.
+
+**Lista "Listo cuando":** ✔ la carga con pérdida mayor a la tolerancia aparece marcada en el tramo exacto · ✔ los cálculos de pureza coinciden con los casos de la fase 3.
