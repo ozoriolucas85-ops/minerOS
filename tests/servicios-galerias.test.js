@@ -93,8 +93,9 @@ describe('autenticación y turnos', () => {
   });
 
   it('turnoActual devuelve el turno en curso o el más reciente', () => {
-    const t = estado.listar('turnos')[0];
-    expect(turnoActual(t.inicio + 1).id).toBe(t.id);
-    expect(turnoActual(0).id).toBe(t.id);
+    const t = estado.obtener('turnos', 'T-ACTUAL');
+    expect(turnoActual(t.inicio + 1).id).toBe('T-ACTUAL');
+    expect(turnoActual(t.inicio - 60 * 60 * 1000).id).toBe('T-H1');
+    expect(turnoActual(t.fin + 999999999).id).toBe('T-ACTUAL');
   });
 });

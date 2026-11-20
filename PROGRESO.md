@@ -128,7 +128,7 @@ Todo `src/domain/` es puro: recibe datos y `config`, devuelve resultados, sin DO
 - Íconos nuevos `info` y `sin-senal` (para no usar los del semáforo fuera de los estados).
 - Tests nuevos: `servicios-cargas.test.js` y el recorrido de la carga.
 
-**Verificación:** `npm test` ✔ (197 tests) · `npm run build` ✔ · navegador con clics reales:
+**Verificación:** `npm test` ✔ (189 tests) · `npm run build` ✔ · navegador con clics reales:
 - El formulario vacío muestra los 4 errores.
 - Se crea CAN-0001 (Cuadrilla Este, G3, hierro, 0,25 m³) y sugiere el Frente Este.
 - 900 kg en el frente → 850 kg en el cruce −40: ese tramo exacto queda "−50 kg · 5,6 %" y "SOSPECHOSO… Cuadrilla Este · hora", y se guarda el evento.
@@ -137,3 +137,21 @@ Todo `src/domain/` es puro: recibe datos y `config`, devuelve resultados, sin DO
 - El historial con "Solo sospechosos" deja solo CAN-0001.
 
 **Lista "Listo cuando":** ✔ la carga con pérdida mayor a la tolerancia aparece marcada en el tramo exacto · ✔ los cálculos de pureza coinciden con los casos de la fase 3.
+
+## Fase 8 — Productividad y panel general ✅ (2026-11-20)
+
+- **Datos de demo con historia:** el seed trae 5 turnos anteriores (mañana/tarde/noche) más el actual. En cada uno, los trabajadores escanean la boca, su frente y de nuevo la boca (para las horas efectivas), y cada cuadrilla tiene 4–7 cargas pesadas frente → cruces → boca → acopio, con pérdidas normales (menos de 1,2 % por tramo) y pureza medida en una de cada dos (con el mismo cálculo de la app). Generador pseudoaleatorio con semilla: la demo es reproducible. `MINERAL_POR_GALERIA` define qué se extrae en cada galería.
+- **Servicio `servicios/productividad.js`:** `productividadDelPeriodo({turnoId | desde, hasta})` (por cuadrilla, por trabajador, ranking, evolución por turno y KPIs) y `resumenDelPanel()` (personas adentro, toneladas y cargas del turno, pureza promedio de 24 h, sospechosos del turno, últimos eventos).
+- **Gráficos (`ui/components/graficos.js`, Chart.js con tree-shaking):** colores y fuentes desde tokens; una sola serie en ámbar por gráfico (el verde, el amarillo y el rojo quedan para los estados; se validó el contraste con el script de la guía de visualización), tooltip en español, sin leyenda por ser una sola serie (la nombra el título).
+- **Pantalla Productividad:** filtros por turno y por rango de fechas; KPIs (producción, t/h efectiva, cargas en el acopio); barras de toneladas por cuadrilla; línea de evolución por turno; ranking top 10 por t/hora efectiva; tabla por trabajador con "Exportar CSV" (separador `;`, coma decimal y BOM para Excel en español, `ui/csv.js`).
+- **Panel general:** arriba las alertas activas (o "sin alertas"); tarjetas de personas adentro, producción del turno, pureza promedio y traslados sospechosos (resaltada si hay); mini mapa con los estados (clic → mapa); estado de cada galería con canario y batería; últimos traslados sospechosos y últimos eventos. Se redibuja con cualquier cambio de datos y cada minuto.
+- Tests nuevos: historia del seed (turnos seguidos, cargas completas sin sospechosos, reproducible), servicio de productividad y CSV. Se ajustaron los tests que suponían un seed sin cargas.
+
+**Verificación:** `npm test` ✔ (194 tests) · `npm run build` ✔ · navegador:
+- Con el panel abierto, un avance en G3 y una carga con 900 → 860 kg actualizan solos la alerta (EVACUACIÓN, Galería Este), la producción (0,9 t), los sospechosos (1) y la lista "CAN-0087 · −40 kg (4,4 %) · Cuadrilla Este".
+- En Productividad, el filtro por turno cambia los KPI (T-H1: 14,9 t, 17 cargas) y las barras.
+- Con el turno en curso elegido, una carga nueva de la cuadrilla Norte llegada al acopio sube su barra de 0 a 0,99 t sin recargar.
+- La exportación CSV se probó con tests unitarios; no hice clic en "Exportar CSV" en el navegador porque descarga un archivo.
+- Vistas a 390 px revisadas.
+
+**Lista "Listo cuando":** ✔ el panel resume la mina de un vistazo · ✔ los gráficos se actualizan con datos nuevos.

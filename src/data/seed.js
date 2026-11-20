@@ -1,4 +1,6 @@
 // Mina de demostración "La Esperanza".
+import { purezaPorDensidad, purezaManual } from '../domain/pureza.js';
+
 // 3 niveles (−20, −40 y −60 m), 6 galerías, cruces, frentes, 2 refugios, boca
 // de mina y acopio. 3 cuadrillas con capataz y 4–5 trabajadores, 1 ingeniero.
 //
@@ -184,6 +186,11 @@ export function crearSeed({ ahora = Date.now() } = {}) {
     });
   });
 
+  // ── Historia: 5 turnos anteriores con cargas en el acopio ─────
+  const historia = crearHistoria({ inicioActual: turnos[0].inicio, cuadrillas, nodos, aristas });
+  turnos.unshift(...historia.turnos);
+  escaneos.unshift(...historia.escaneos);
+
   return {
     config: [config],
     usuarios,
@@ -194,8 +201,136 @@ export function crearSeed({ ahora = Date.now() } = {}) {
     escaneos,
     turnos,
     avances: [],
-    cargas: [],
+    cargas: historia.cargas,
     eventos: [],
     desbloqueos: [],
   };
+}
+
+// ── Historia de turnos anteriores (para productividad) ──────────────
+
+/** Mineral que se extrae en cada galería de la demo. */
+export const MINERAL_POR_GALERIA = Object.freeze({ G1: 'hierro', G2: 'cobre', G3: 'hierro', G4: 'caliza', G5: 'cobre', G6: 'cuarzo' });
+
+/** Generador pseudoaleatorio con semilla: la demo da siempre los mismos números. */
+export function crearAzar(semilla = 1) {
+  let a = semilla >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const TIPOS_TURNO = ['mañana', 'tarde', 'noche'];
+
+function caminoHastaBoca(frenteId, nodos, aristas) {
+  // BFS simple para no depender de domain/ desde los datos de ejemplo
+  const vecinos = new Map(nodos.map((n) => [n.id, []]));
+  aristas.forEach((a) => {
+    vecinos.get(a.desde)?.push(a.hasta);
+    vecinos.get(a.hasta)?.push(a.desde);
+  });
+  const previo = new Map([[frenteId, null]]);
+  const cola = [frenteId];
+  while (cola.length) {
+    const actual = cola.shift();
+    if (actual === 'BOCA') break;
+    for (const v of vecinos.get(actual) ?? []) {
+      if (!previo.has(v)) {
+        previo.set(v, actual);
+        cola.push(v);
+      }
+    }
+  }
+  const camino = [];
+  for (let n = 'BOCA'; n; n = previo.get(n)) camino.unshift(n);
+  return camino;
+}
+
+function crearHistoria({ inicioActual, cuadrillas, nodos, aristas, cantidad = 5 }) {
+  const azar = crearAzar(42);
+  const TURNO = 8 * 60 * MINUTO;
+  const tipoNodo = new Map(nodos.map((n) => [n.id, n.tipo]));
+  const turnos = [];
+  const escaneos = [];
+  const cargas = [];
+  let numeroCarga = 1;
+  for (let k = cantidad; k >= 1; k--) {
+    const inicio = inicioActual - k * TURNO;
+    const fecha = new Date(inicio);
+    const indiceTipo = (((Math.round((inicio - inicioActual) / TURNO)) % 3) + 3) % 3;
+    const turno = {
+      id: `T-H${k}`,
+      fecha: `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`,
+      tipo: TIPOS_TURNO[indiceTipo],
+      inicio,
+      fin: inicio + TURNO,
+    };
+    turnos.push(turno);
+    cuadrillas.forEach((c) => {
+      // Escaneos: entra por la boca, trabaja en un frente, sale por la boca.
+      c.trabajadorIds.forEach((usuarioId, i) => {
+        const galeriaId = c.galeriaIds[(i + k) % c.galeriaIds.length];
+        const frente = nodos.find((n) => n.galeriaId === galeriaId && n.tipo === 'frente');
+        const entra = inicio + (10 + azar() * 20) * MINUTO;
+        const llegaFrente = entra + (15 + azar() * 10) * MINUTO;
+        const dejaFrente = inicio + TURNO - (40 + azar() * 70) * MINUTO;
+        const sale = dejaFrente + (15 + azar() * 10) * MINUTO;
+        [
+          ['BOCA', entra],
+          [frente.id, llegaFrente],
+          ['BOCA', sale],
+        ].forEach(([nodoId, timestamp], j) =>
+          escaneos.push({ id: `E-H${k}-${usuarioId}-${j}`, usuarioId, nodoId, timestamp, simulado: false }),
+        );
+      });
+      // Cargas: varias por cuadrilla, pesadas frente → cruces → boca → acopio.
+      const cantidadCargas = 4 + Math.floor(azar() * 4);
+      for (let n = 0; n < cantidadCargas; n++) {
+        const galeriaId = c.galeriaIds[n % c.galeriaIds.length];
+        const frente = nodos.find((x) => x.galeriaId === galeriaId && x.tipo === 'frente');
+        const puntos = [...caminoHastaBoca(frente.id, nodos, aristas).filter((id) => ['frente', 'cruce', 'boca'].includes(tipoNodo.get(id))), 'ACOPIO'];
+        const volumen = 0.25;
+        let peso = 780 + azar() * 260;
+        let t = inicio + (60 + n * 50 + azar() * 20) * MINUTO;
+        const pesajes = puntos.map((nodoId, i) => {
+          if (i > 0) {
+            peso *= 1 - azar() * 0.012; // pérdidas normales, menores a la tolerancia
+            t += (6 + azar() * 6) * MINUTO;
+          }
+          return { nodoId, peso: Math.round(peso * 10) / 10, timestamp: Math.round(t) };
+        });
+        // Pureza medida en una de cada dos cargas, con el mismo cálculo que la app.
+        const mineral = MINERAL_POR_GALERIA[galeriaId];
+        let pureza = null;
+        let modoPureza = null;
+        if (n % 2 === 0) {
+          modoPureza = ['caliza', 'cuarzo'].includes(mineral) ? 'manual' : 'densidad';
+          pureza =
+            modoPureza === 'densidad'
+              ? purezaPorDensidad({ peso: pesajes[0].peso, volumen, mineral }, CONFIG_POR_DEFECTO).pureza
+              : purezaManual({ muestra: 500, util: Math.round(280 + azar() * 180) }).pureza;
+          pureza = Math.round(pureza * 10) / 10;
+        }
+        cargas.push({
+          id: `car-h${k}-${c.id}-${n}`,
+          codigo: `CAN-${String(numeroCarga++).padStart(4, '0')}`,
+          cuadrillaId: c.id,
+          turnoId: turno.id,
+          galeriaId,
+          mineral,
+          volumen,
+          pesajes,
+          pureza,
+          modoPureza,
+          creada: pesajes[0].timestamp,
+          simulado: false,
+        });
+      }
+    });
+  }
+  return { turnos, escaneos, cargas };
 }

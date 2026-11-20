@@ -68,3 +68,25 @@ describe('mina demo', () => {
     expect(CONFIG_POR_DEFECTO.toleranciaPerdida).toBe(3);
   });
 });
+
+describe('historia de la demo', () => {
+  it('trae 5 turnos anteriores más el actual, en orden y sin solaparse', () => {
+    expect(seed.turnos).toHaveLength(6);
+    for (let i = 1; i < seed.turnos.length; i++) expect(seed.turnos[i].inicio).toBe(seed.turnos[i - 1].fin);
+    expect(seed.turnos.at(-1).id).toBe('T-ACTUAL');
+  });
+  it('las cargas históricas llegaron al acopio sin pérdidas sospechosas', async () => {
+    const { resumenCarga } = await import('../src/domain/traslados.js');
+    const nodosPorId = new Map(seed.nodos.map((n) => [n.id, n]));
+    expect(seed.cargas.length).toBeGreaterThan(50);
+    for (const c of seed.cargas) {
+      const r = resumenCarga(c, CONFIG_POR_DEFECTO, nodosPorId);
+      expect(r.completa).toBe(true);
+      expect(r.sospechosa).toBe(false);
+    }
+  });
+  it('es reproducible (mismo seed → mismos datos)', () => {
+    const otra = crearSeed({ ahora: new Date('2026-11-20T10:00:00').getTime() });
+    expect(otra.cargas).toEqual(seed.cargas);
+  });
+});

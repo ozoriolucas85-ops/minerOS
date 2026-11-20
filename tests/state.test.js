@@ -70,7 +70,7 @@ describe('estado global', () => {
     estado.suscribirse(fn, ['galerias']);
     await estado.restablecerDemo();
     expect(estado.obtener('galerias', 'G1').metrosSinApuntalar).toBe(2);
-    expect(estado.listar('cargas')).toEqual([]);
+    expect(estado.obtener('cargas', 'CAN-1')).toBeNull();
     expect(fn).toHaveBeenCalledWith({ coleccion: '*', tipo: 'reemplazar' });
   });
 

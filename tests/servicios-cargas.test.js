@@ -10,6 +10,7 @@ import {
   puntosDeCarga,
 } from '../src/servicios/cargas.js';
 import { registrarAvance } from '../src/servicios/galerias.js';
+import { siguienteCodigo } from '../src/domain/traslados.js';
 import { crearAlmacenFalso } from './ayudas.js';
 
 beforeEach(async () => {
@@ -20,11 +21,12 @@ const datos = { cuadrillaId: 'CU-ESTE', galeriaId: 'G3', mineral: 'hierro', volu
 
 describe('servicio de cargas', () => {
   it('crea cargas con códigos únicos correlativos', async () => {
+    const esperado = siguienteCodigo(estado.listar('cargas'));
     const a = await crearCarga({ ...datos, ahora: 1 });
     const b = await crearCarga({ ...datos, ahora: 2 });
-    expect(a.codigo).toBe('CAN-0001');
-    expect(b.codigo).toBe('CAN-0002');
-    expect(buscarCargaPorCodigo('can-0002').id).toBe(b.id);
+    expect(a.codigo).toBe(esperado);
+    expect(Number(b.codigo.slice(4))).toBe(Number(a.codigo.slice(4)) + 1);
+    expect(buscarCargaPorCodigo(b.codigo.toLowerCase()).id).toBe(b.id);
     expect(buscarCargaPorCodigo('CAN-9999')).toBeNull();
   });
 
@@ -49,7 +51,7 @@ describe('servicio de cargas', () => {
     expect(r.tramo.sospechoso).toBe(true);
     const ev = estado.listar('eventos', (e) => e.tipo === 'sospechoso');
     expect(ev).toHaveLength(1);
-    expect(ev[0]).toMatchObject({ codigo: 'CAN-0001', cuadrillaId: 'CU-ESTE', timestamp: 20 });
+    expect(ev[0]).toMatchObject({ codigo: c.codigo, cuadrillaId: 'CU-ESTE', timestamp: 20 });
     expect(ev[0].detalle).toMatch(/Cuadrilla Este/);
     r = await registrarPesaje(c.id, { nodoId: 'BOCA', peso: 849, ahora: 30 });
     expect(r.tramo.sospechoso).toBe(false);
@@ -81,5 +83,25 @@ describe('servicio de cargas', () => {
     const sinPesajes = calcularPurezaDeCarga({ ...c, pesajes: [] }, { modo: 'manual', muestra: 10, util: 5 });
     expect(sinPesajes.mineralUtil).toBeNull();
     expect(() => calcularPurezaDeCarga(c, { modo: 'otro' })).toThrow(/modo/);
+  });
+});
+
+describe('servicio de productividad', () => {
+  it('calcula el período por turno y por fechas, y el resumen del panel', async () => {
+    const { productividadDelPeriodo, resumenDelPanel } = await import('../src/servicios/productividad.js');
+    const t = estado.obtener('turnos', 'T-H1');
+    const uno = productividadDelPeriodo({ turnoId: 'T-H1', ahora: t.fin + 1 });
+    expect(uno.turnos).toHaveLength(1);
+    expect(uno.toneladas).toBeGreaterThan(0);
+    expect(uno.cuadrillas).toHaveLength(3);
+    expect(uno.trabajadores[0].toneladasPorHora).toBeGreaterThanOrEqual(uno.trabajadores.at(-1).toneladasPorHora ?? 0);
+    const todos = productividadDelPeriodo({ ahora: Date.now() + 1e12 });
+    expect(todos.evolucion).toHaveLength(6);
+    expect(todos.toneladas).toBeGreaterThan(uno.toneladas);
+    expect(productividadDelPeriodo({ desde: '1999-01-01', hasta: '1999-01-02' }).toneladas).toBe(0);
+    const panel = resumenDelPanel(estado.obtener('turnos', 'T-ACTUAL').inicio + 1000);
+    expect(panel.turno.id).toBe('T-ACTUAL');
+    expect(panel.purezaPromedio).toBeGreaterThan(0);
+    expect(panel.sospechososTurno).toEqual([]);
   });
 });
